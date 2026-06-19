@@ -1,0 +1,616 @@
+
+PRODUCT REQUIREMENT DOCUMENT
+GridLock IQ
+Spatio-Temporal Parking Intelligence & Predictive Resource Optimization Engine
+
+Flipkart Grid 5.0  |  Round 2  |  Theme 1
+Poor Visibility on Parking-Induced Congestion
+Submission Deadline: June 21, 2026
+
+Project Name
+GridLock IQ
+Version
+1.0.0 — Final
+Competition
+Flipkart Grid 5.0 — Round 2
+Theme
+Theme 1: Parking-Induced Congestion
+Target User
+Bengaluru Traffic Police Command Center
+Dataset
+HackerEarth-provided Bengaluru violation logs (no external data)
+Deployment
+Streamlit Community Cloud (public demo link)
+
+1. Executive Summary
+Bengaluru's traffic enforcement is fundamentally reactive. Officers patrol based on experience, not data. When illegal parking chokes an intersection at Koramangala at 6 PM on a Saturday, no alert fires. No officer is pre-positioned. The congestion compounds until someone physically responds.
+
+GridLock IQ flips this entirely.
+
+Operating strictly within the zero-external-dataset constraint, GridLock IQ derives a physics-inspired Accumulated Obstruction Index (AOI) entirely from internal violation logs using three key dataset columns most teams will ignore: vehicle_type (physical mass), closed_date minus created_date (obstruction duration), and spatial density within Uber H3 hexagonal cells.
+
+The system predicts gridlock 1 to 4 hours in advance and auto-generates patrol dispatch instructions naming specific police stations, zones, and recommended unit counts. Beyond prediction, it includes a what-if enforcement simulator that lets officers compare current patrol patterns against AI-optimized deployment — quantifying the expected congestion reduction in percentage terms.
+
+8 Innovation Features
+Hotspot Detection to Dispatch Optimization
+Multi-Horizon Forecast
+Predict AOI at T+1h, T+2h, T+4h
+Zero External Data
+Full compliance. No disqualification risk.
+
+2. Problem Statement
+2.1 Operational Challenge
+On-street illegal parking and spillover parking near commercial areas, metro stations, and events actively choke carriageways and intersections across Bengaluru. The problem is not the existence of violators — it is the inability to anticipate and respond before congestion cascades.
+
+Challenge 1
+Enforcement is patrol-based and reactive. Officers respond after gridlock forms, not before.
+Challenge 2
+No heatmap of parking violations vs. congestion impact exists. No zone is scored by real-world severity.
+Challenge 3
+Difficult to prioritize enforcement zones. Officers rely on experience, not data-driven priority lists.
+Challenge 4
+No repeat offender tracking. Chronic violators face no targeted enforcement.
+Challenge 5
+Enforcement ROI is unknown. No measure of which patrol actions actually reduce congestion.
+
+2.2 Problem Statement Direction
+"How can AI-driven parking intelligence detect illegal parking hotspots, quantify their impact on traffic flow, and enable targeted proactive enforcement — using only internal violation logs?"
+
+3. Core Technical Innovation — The AOI
+3.1 The Zero-External-Dataset Constraint
+Competition rules explicitly prohibit external datasets for Theme 1. Teams using Google Maps API, TomTom speed logs, or any supplementary traffic data face immediate disqualification. GridLock IQ fully complies by deriving all congestion signals from the violation log itself.
+
+3.2 The Hidden Dataset Columns
+Most teams will use only: latitude, longitude, vehicle_type, and created_date. GridLock IQ exploits three additional columns that most teams will ignore:
+
+closed_date
+Minus created_date gives exact obstruction duration in minutes — a direct proxy for how long a lane was blocked.
+junction_name
+Violations at junctions have 2x the congestion impact of mid-block violations. This is a free multiplier.
+validation_status
+Approved vs rejected tells you enforcement ROI per zone — which patrols are effective and which are wasted.
+
+3.3 Accumulated Obstruction Index (AOI) — The Core Formula
+AOI is a physics-inspired metric that simulates lane capacity degradation using purely internal features:
+
+AOI  =  VehicleMass  x  ObstructionDuration  x  LocalDensity  x  JunctionMultiplier
+
+Where:
+  VehicleMass         =  TANKER=5.0  |  BUS=4.5  |  CAR/PASSENGER=3.0
+                         TAXI=2.5  |  MOTOR CYCLE=1.5  |  SCOOTER=1.0
+
+  ObstructionDuration =  closed_date - created_date  (in minutes)
+                         If closed_date is NULL: use rolling mean of that H3 cell
+
+  LocalDensity        =  count of concurrent open violations in same H3 hex cell
+                         within a rolling 3-hour temporal window
+
+  JunctionMultiplier  =  2.0 if junction_name is not null, else 1.0
+
+  Final AOI normalised to 0-100 scale:
+    0-25   =  Low Risk (Green)
+    26-50  =  Moderate Risk (Yellow)
+    51-75  =  High Risk (Orange)
+    76-100 =  Critical Gridlock (Red)
+
+3.4 Why This Is Defensible
+When judges challenge 'how are you measuring congestion without traffic data', the answer is:
+
+A TANKER parked at a junction for 45 minutes blocks more lanes than a scooter parked for 5 minutes — this is physics, not assumption.
+Multiple concurrent violations in the same 100-metre cell create compounding obstruction — density is real congestion signal.
+Junction violations have measured higher congestion impact in urban traffic literature — the 2x multiplier is conservative.
+The normalization to 0-100 allows intuitive communication with traffic police — they understand risk levels, not raw numbers.
+
+4. Feature Specifications
+GridLock IQ is built around 8 features, prioritized into three tiers based on top-10 differentiation impact.
+
+F1: Uber H3 Spatial Binning + HDBSCAN Clustering
+MUST BUILD
+
+Purpose
+Map individual GPS coordinates into discrete 100-metre hexagonal cells using Uber's H3 spatial index, then run HDBSCAN to discover corridor-level hotspot clusters.
+
+Why H3 over standard grid or radius-based binning
+Hexagonal cells eliminate edge artifacts that square grids produce at cell borders.
+H3 resolution level 9 produces 100-metre cells — correct scale for street-level parking analysis.
+H3 IDs are stable, hashable keys — easy to aggregate across time windows without floating-point errors.
+3D rendering of H3 cells as hex pillars (via PyDeck) is visually distinctive and immediately interpretable.
+
+Why HDBSCAN over DBSCAN
+Bengaluru's violation density is non-uniform — commercial corridors (Koramangala, MG Road) are dense, residential areas sparse. HDBSCAN handles variable density natively; DBSCAN does not.
+HDBSCAN outputs a confidence score per cluster, enabling soft boundary detection — useful for flagging 'emerging hotspots'.
+
+Technical Specification
+Input
+Cleaned dataframe with latitude, longitude, computed AOI score, timestamp
+Library
+uber-h3-py for binning, hdbscan for clustering
+H3 Resolution
+Resolution 9 (average hexagon area: 0.105 km²)
+Temporal Window
+Rolling 3-hour aggregation per H3 cell
+Output
+H3 cell ID → aggregated AOI score, cluster label, violation count, dominant vehicle type
+Saved As
+h3_clustered_zones.parquet
+
+F2: Multi-Horizon LightGBM Forecasting Engine
+MUST BUILD
+
+Purpose
+Predict the AOI score for every active H3 cell at T+1h, T+2h, and T+4h horizons. This shifts GridLock IQ from a reporting tool to a predictive intelligence system.
+
+Feature Engineering for Forecasting
+Lag features: AOI at T-1h, T-2h, T-3h per H3 cell
+Cyclic time encoding: sin(2π × hour/24), cos(2π × hour/24), sin(2π × day/7), cos(2π × day/7) — prevents the model treating 23:00 and 00:00 as maximally different
+Rolling statistics: 7-day rolling mean AOI, 7-day rolling max AOI, 7-day rolling std per cell
+Junction flag: binary indicator for junction-adjacent H3 cells
+Vehicle type mode: most frequent vehicle type in the H3 cell historically
+Historical density: average concurrent violations per cell at same hour across all historical data
+
+Model Training Strategy
+Algorithm
+LightGBM Regressor (fast, handles non-linear temporal patterns well)
+Train/Test Split
+Chronological — first 80% of timeline for training, last 20% for validation. Never shuffle time series.
+Three Models
+Separate model for T+1h, T+2h, T+4h prediction horizons
+Validation Metric
+MAE (Mean Absolute Error on AOI scale 0-100), RMSE, R²
+Serialization
+joblib.dump() → /models/lgbm_t1.pkl, lgbm_t2.pkl, lgbm_t4.pkl
+Expected MAE
+Target < 8 points on 0-100 AOI scale for T+1h horizon
+
+F3: PyDeck 3D Hex Pillar Visualization
+MUST BUILD
+
+Purpose
+Render H3 cells as three-dimensional hexagonal columns — height encodes AOI score, color encodes risk tier. A time slider enables playback of historical violations and preview of predicted future states.
+
+Design Specification
+Base layer: Folium heatmap for overall violation density context
+3D layer: PyDeck H3HexagonLayer — elevation = AOI score × 50, color = risk tier (green/yellow/orange/red)
+Click interaction: clicking a hex cell opens a sidebar panel showing zone name, AOI score, violation count, dominant vehicle type, enforcement efficiency score, and next 4-hour forecast
+Time slider: 24-hour playback of historical AOI evolution per cell
+Predict mode toggle: switches map to show T+1h, T+2h, or T+4h forecast AOI values
+
+Why This Matters for Judges
+The 3D hex pillar map is the single most visually distinctive element in any submission. When presented live, judges from Bengaluru Traffic Police will immediately recognize Koramangala, HSR Layout, and ORR as the tallest columns — validating the model's credibility on ground they know personally.
+
+F4: Automated Dispatch Alert Engine
+MUST BUILD
+
+Purpose
+Auto-generate plain-text operational dispatch instructions when predicted AOI exceeds 75 (Critical threshold) in any H3 cell.
+
+Alert Logic
+for each H3 cell in forecast_t1h:
+    if predicted_AOI >= 75:
+        station = reverse_lookup(h3_cell, center_code_jurisdiction_map)
+        vehicle_type = dominant_vehicle_type(h3_cell)
+        units = ceil(predicted_AOI / 25)  # 1-4 units based on severity
+        generate_alert(
+            f'CRITICAL ALERT: Predicted gridlock at {zone_name} in 60 minutes.'
+            f'Severity: {predicted_AOI:.0f}/100  |  Primary violator: {vehicle_type}'
+            f'Recommended: Deploy {units} towing unit(s) from {station}.'
+            f'Time window: {current_time} to {current_time + 2h}'
+        )
+
+Sample Alert Output
+CRITICAL ALERT — Koramangala 5th Block
+Predicted AOI: 88/100  |  Horizon: 60 minutes  |  Primary violator: CAR
+Action: Deploy 3 towing units from BTP051 - Shivajinagar immediately.
+
+F5: Repeat Offender Intelligence
+STRONG
+
+Purpose
+Track vehicle_number across violation history to identify chronic violators — vehicles that accumulate multiple violations across multiple zones. These become targeted enforcement priority targets.
+
+Scoring Formula
+Repeat_Risk_Score = (violation_count * 0.5)
+                  + (unique_locations_count * 0.3)
+                  + (recency_weight * 0.2)
+
+Where recency_weight = violations in last 30 days / total violations
+
+Risk Tier:
+  Score >= 10  =  HIGH PRIORITY (immediate towing on next detection)
+  Score 5-9    =  MEDIUM PRIORITY (flagged for checkpoint stops)
+  Score < 5    =  MONITOR
+
+Output
+Top 50 repeat offenders ranked by risk score
+Per-vehicle violation map showing all locations
+Integration with dispatch alerts: if a HIGH PRIORITY vehicle is detected in a violation, alert is upgraded
+
+F6: What-If Enforcement Simulator
+STRONG
+
+Purpose
+Allow operators to compare two enforcement strategies side-by-side and see the predicted congestion reduction for each. This is the single feature most likely to produce an audible reaction from judges.
+
+Scenarios
+Scenario A
+Current patrol pattern — based on historical center_code deployment extracted from dataset
+Scenario B
+GridLock IQ optimized deployment — zones selected by predicted AOI, stations assigned by jurisdiction
+
+Output Metrics
+Expected total violations prevented: Scenario A vs B
+Expected AOI reduction per zone: Scenario A vs B
+Coverage efficiency: zones covered per officer in each scenario
+Visual: split map showing Scenario A (red zones) vs Scenario B (green zones cleared)
+
+F7: Enforcement ROI Score
+STRONG
+
+Purpose
+This feature is original — neither reference PRD includes it. The validation_status column (approved/rejected) reveals which enforcement actions actually resulted in cleared violations. Using this to compute per-zone enforcement efficiency exposes where patrol effort is wasted.
+
+Formula
+Enforcement_ROI(zone) = approved_violations / (approved + rejected) * 100
+
+Interpretation:
+  ROI > 80%   =  High efficiency zone — patrol here is effective
+  ROI 50-80%  =  Medium efficiency — patrol with targeted focus
+  ROI < 50%   =  Low efficiency — either false positives or structural issue
+                  Recommend: infrastructure intervention over patrol
+
+Actionable Output
+Per-zone ROI bar chart
+Per-station ROI ranking — surface which BTP stations have highest enforcement effectiveness
+Redeployment recommendation: 'BTP043 has 38% ROI in Upparpet. Redeploy to Koramangala where ROI is 82%'
+
+F8: Chronic Zone Classification
+NICE TO HAVE
+
+Purpose
+Separate zones into CHRONIC (structural problem — appears in top-20 hotspots every week), EPISODIC (event-driven), and RANDOM (low frequency). Different interventions are required for each.
+
+CHRONIC Zone
+Appears in top-20 hotspots across 80%+ of weekly time windows. Needs infrastructure fix, not just enforcement.
+EPISODIC Zone
+Spikes on weekends, evenings, or event days. Needs scheduled patrol deployment.
+RANDOM Zone
+Low frequency, low severity. Monitor only.
+
+Why Judges Care
+Traffic Police leadership understands the difference between a zone that needs a tow truck and one that needs a road redesign. Presenting this classification shows operational maturity beyond what any analytics dashboard provides.
+
+5. Technical Architecture
+5.1 System Pipeline
+[Raw Violation CSV]
+       |
+       v
+[Data Pipeline: src/data_pipeline.py]
+  - Parse dates, compute Obstruction Duration (Dt)
+  - Map vehicle_type to VehicleMass (M)
+  - Extract cyclic time features (sin/cos hour, day)
+  - Compute junction_flag from junction_name
+  - Filter: validation_status == 'approved'
+       |
+       v
+[Spatial Engine: src/spatial_engine.py]
+  - Uber H3 binning (resolution 9)
+  - Compute LocalDensity per H3 cell (rolling 3h window)
+  - Compute AOI = M x Dt x Density x JunctionMultiplier
+  - Normalize AOI to 0-100
+  - HDBSCAN corridor clustering
+       |
+       v
+[ML Engine: src/forecast_engine.py]
+  - Feature matrix construction (lags, rolling stats, cyclic)
+  - Train LightGBM for T+1h, T+2h, T+4h
+  - Serialise models to /models/
+       |
+       v
+[Optimization Engine: src/patrol_optimizer.py]
+  - Load forecast results
+  - Greedy zone-to-station assignment by center_code jurisdiction
+  - Generate patrol schedule matrix (station x time_slot x priority_zones)
+  - Generate dispatch alert text for AOI >= 75
+       |
+       v
+[FastAPI Backend: api/main.py]
+  - GET /hotspots         -> Top zones by current AOI
+  - GET /predict          -> 24h forecast per zone
+  - GET /patrol-schedule  -> Today's optimized patrol schedule
+  - GET /zone/{id}        -> Full zone detail card
+  - GET /alerts           -> Active critical alerts
+       |
+       v
+[Streamlit Frontend: app/main.py]
+  - PyDeck 3D hex pillar map
+  - Folium heatmap layer
+  - Time slider (historical + forecast)
+  - What-if simulator panel
+  - Dispatch alert feed
+  - Enforcement ROI dashboard
+
+5.2 Technology Stack
+Spatial Binning
+uber-h3-py (H3 hexagonal indexing, resolution 9)
+Clustering
+hdbscan (variable-density corridor detection)
+Feature Engineering
+pandas, numpy, datetime
+Forecasting Model
+lightgbm, joblib (serialization)
+Patrol Optimization
+scipy.optimize / greedy assignment (no OR-Tools overhead)
+Backend API
+FastAPI + uvicorn (async, production-grade)
+3D Map
+pydeck (deck.gl H3HexagonLayer)
+2D Map
+folium + folium.plugins.HeatMap
+Charts
+plotly (interactive, export-friendly)
+Frontend
+Streamlit (rapid deployment, no frontend build step)
+Data Storage
+parquet files (fast I/O, no database dependency)
+Deployment
+Streamlit Community Cloud (free, one-command deploy, public URL)
+
+5.3 Repository Structure
+gridlock-iq/
+├── data/
+│   ├── raw/                    # Original HackerEarth CSV
+│   └── processed/              # Cleaned parquet files
+├── src/
+│   ├── data_pipeline.py        # Ingestion, cleaning, AOI computation
+│   ├── spatial_engine.py       # H3 binning, HDBSCAN clustering
+│   ├── forecast_engine.py      # LightGBM training + inference
+│   ├── patrol_optimizer.py     # Greedy dispatch optimizer
+│   └── repeat_offender.py      # Vehicle-level risk scoring
+├── models/
+│   ├── lgbm_t1.pkl             # T+1h forecast model
+│   ├── lgbm_t2.pkl             # T+2h forecast model
+│   └── lgbm_t4.pkl             # T+4h forecast model
+├── api/
+│   └── main.py                 # FastAPI endpoints
+├── app/
+│   └── main.py                 # Streamlit dashboard
+├── notebooks/
+│   └── eda.ipynb               # Exploratory analysis
+├── requirements.txt
+└── README.md
+
+6. Dashboard Specification — 5 Pages
+
+Page 1 — Command Overview
+The landing page. Designed to give a traffic police commander the full operational picture in 10 seconds.
+
+KPI Card 1
+Total Active Violations (today)
+KPI Card 2
+Critical Zones (AOI > 75) — count
+KPI Card 3
+Predicted Peak Time (next 4 hours)
+KPI Card 4
+Enforcement ROI (today's average across all stations)
+Alert Feed
+Live list of dispatch alerts for AOI >= 75 zones, newest first
+Violation Trend
+Hourly violation count chart for today vs 7-day average
+
+Page 2 — Hotspot Intelligence Map
+The primary visualization. PyDeck 3D hex pillar map of Bengaluru with interactive zone selection.
+
+Base Layer
+Folium heatmap (violation density, all time)
+3D Layer
+H3HexagonLayer — height = AOI, color = risk tier
+Click Action
+Opens zone detail: AOI, violation count, vehicle breakdown, forecast chart, enforcement ROI
+Time Slider
+Hour-by-hour playback from 6 AM to midnight
+Filter Panel
+Filter by vehicle type, violation code, date range, zone risk tier
+Chronic Zones
+Chronic zones shown with distinct border pattern (pulsing outline)
+
+Page 3 — Prediction Engine
+Forward-looking view. Shows predicted AOI values for next 1h, 2h, and 4h across all active H3 cells.
+
+Horizon Selector
+Toggle between T+1h, T+2h, T+4h forecast views
+Map Update
+Hex pillar colors update to predicted risk tier for selected horizon
+Top 10 Table
+Ranked list of highest predicted-AOI zones with location, current vs predicted AOI, trend
+Feature Importance
+Horizontal bar chart showing which features drive predictions most
+Model Metrics
+MAE, RMSE, R² displayed transparently — credibility with technical judges
+
+Page 4 — Enforcement Optimizer
+The operational action center. Generates today's patrol schedule and dispatch instructions.
+
+Patrol Schedule
+Matrix view: police station rows × time slot columns → assigned priority zones
+Dispatch Alerts
+Active critical alerts with zone, severity, recommended unit count, station
+Enforcement ROI
+Per-station bar chart. Stations sorted by ROI descending.
+Repeat Offenders
+Top 20 high-priority vehicle numbers with violation count and last known location
+Redeployment Tip
+Auto-generated tip: 'Redeploy X units from low-ROI zones to Y'
+
+Page 5 — What-If Simulator
+The differentiator. Input current patrol deployment, compare vs GridLock IQ optimized deployment.
+
+Input
+Number of available officers, current patrol zones (manual input or auto-populated from dataset)
+Scenario A
+Current pattern — map shows expected AOI evolution without optimization
+Scenario B
+AI optimized — map shows expected AOI evolution with GridLock IQ deployment
+Delta Output
+Expected violation reduction %, congestion reduction %, coverage efficiency gain
+Side-by-Side Map
+Split-screen Bengaluru map: Scenario A (red high-AOI zones) vs Scenario B (cleared zones)
+
+7. Data Engineering Strategy
+7.1 Dataset Columns Used
+latitude / longitude
+Core spatial input for H3 binning and HDBSCAN clustering
+vehicle_type
+Mapped to VehicleMass (M) in AOI formula. 7-tier scale.
+created_date
+Violation start time. Used for temporal features (hour, day, cyclic encoding).
+closed_date
+Violation end time. Δt = closed_date - created_date (obstruction duration).
+junction_name
+Binary junction flag. JunctionMultiplier = 2.0 if not null.
+validation_status
+Enforcement ROI computation. approved/rejected classification per zone.
+center_code
+Police station jurisdiction mapping for patrol optimization.
+vehicle_number
+Repeat offender intelligence. Frequency and multi-location tracking.
+violation_type
+Violation severity weighting. Arrays parsed into individual violation flags.
+
+7.2 Handling Null closed_date
+Approximately 15-25% of records will have null closed_date (violation still open or record incomplete). Strategy:
+Compute rolling mean obstruction duration per H3 cell across completed records
+Impute null closed_date as created_date + cell_mean_duration
+Flag imputed records with is_duration_imputed = True
+Evaluate model separately on imputed vs non-imputed records to check for data leakage
+
+7.3 Feature Engineering Pipeline
+# Cyclic time encoding
+df['hour_sin'] = np.sin(2 * np.pi * df['hour'] / 24)
+df['hour_cos'] = np.cos(2 * np.pi * df['hour'] / 24)
+df['day_sin']  = np.sin(2 * np.pi * df['day_of_week'] / 7)
+df['day_cos']  = np.cos(2 * np.pi * df['day_of_week'] / 7)
+
+# Vehicle mass mapping
+MASS_MAP = {'TANKER':5.0,'BUS':4.5,'CAR':3.0,'PASSENGER':3.0,
+            'TAXI':2.5,'MOTOR CYCLE':1.5,'SCOOTER':1.0}
+df['vehicle_mass'] = df['vehicle_type'].map(MASS_MAP).fillna(1.0)
+
+# H3 binning
+import h3
+df['h3_cell'] = df.apply(lambda r: h3.geo_to_h3(r.latitude, r.longitude, 9), axis=1)
+
+# Obstruction duration
+df['duration_mins'] = (df['closed_date'] - df['created_date']).dt.total_seconds()/60
+
+# Junction flag
+df['junction_flag'] = df['junction_name'].notna().astype(int)
+
+# Local density (rolling 3h window per H3 cell)
+df = df.sort_values('created_date')
+df['local_density'] = df.groupby('h3_cell')['id'].transform(
+    lambda x: x.rolling('3h', on=df.loc[x.index,'created_date']).count())
+
+# AOI computation
+df['AOI_raw'] = df['vehicle_mass'] * df['duration_mins'] * df['local_density'] * df['junction_mult']
+df['AOI'] = (df['AOI_raw'] / df['AOI_raw'].max() * 100).clip(0, 100)
+
+8. Evaluation Metrics
+8.1 Model Performance
+MAE (T+1h)
+Target < 8 points on AOI scale 0-100
+MAE (T+2h)
+Target < 12 points
+MAE (T+4h)
+Target < 18 points (longer horizon = higher acceptable error)
+RMSE
+Target < 12 for T+1h model
+R² Score
+Target > 0.75 for T+1h model
+Feature Importance
+Top 3 features should include AOI_lag_1h, hour_sin, local_density
+
+8.2 AOI Validation (Credibility Check)
+Present this to judges as evidence the proxy works:
+Top 5 highest-AOI zones should correspond to known Bengaluru congestion areas: Koramangala, HSR Layout, Outer Ring Road, MG Road, Whitefield corridors
+Peak AOI hours should align with known Bengaluru peak traffic: 8-10 AM and 5-8 PM
+TANKER violations should produce highest AOI values per incident — validates the vehicle mass weighting
+
+8.3 Enforcement ROI Validation
+Present station-level ROI distribution — expect spread from ~30% to ~85%
+High-density commercial zones (Koramangala, City Market) should have higher ROI — validates the metric
+Zones flagged as CHRONIC should have lower ROI — indicates structural over enforcement problem
+
+9. Live Demo Flow — 6 Steps
+This is how you present the system in 5 minutes to judges. Every step should be practiced until it runs without any loading delays.
+
+Step 1 — Open Dashboard
+Land on Page 1 (Command Overview). Point to KPI cards: 'This is the current state of Bengaluru violations as of today. 3 zones are in Critical status.'
+Step 2 — Show Hotspot Map
+Navigate to Page 2. Pan to Koramangala. Point to the tallest hex pillars. 'This 100-metre cell has the highest Accumulated Obstruction Index in the city right now. Let me click it.'
+Step 3 — Click a Zone
+Click Koramangala 5th Block. Show side panel: AOI 88/100, 47 violations, 60% CAR, enforcement ROI 76%. 'This zone is both high-risk and enforcement-responsive — worth deploying.'
+Step 4 — Show Prediction
+Navigate to Page 3. Toggle to T+2h forecast. 'Our LightGBM model predicts that in 2 hours, this zone escalates to Critical. HSR Layout is also emerging.' Switch to T+4h. Show how the forecast map evolves.
+Step 5 — Run Simulator
+Navigate to Page 5. Set current patrol as 12 officers on standard routes. Click Run AI Optimization. Show split map: Scenario A (6 red zones) vs Scenario B (2 red zones remaining). Point to -28% violation reduction number.
+Step 6 — Show Dispatch Alert
+Navigate to Page 4. Point to the auto-generated alert: 'CRITICAL: Deploy 3 towing units from BTP051 to Koramangala in the next 60 minutes.' This is what a traffic police controller actually needs to act.
+
+10. PPT Slide Structure
+Slide 1
+Problem — Bengaluru enforcement is reactive. One striking congestion photo. One number: X hours of daily delay caused by illegal parking.
+Slide 2
+Why Current Systems Fail — Three bullets: patrol-based, no hotspot data, no prediction. Keep it sharp.
+Slide 3
+Introducing GridLock IQ — One-line pitch. System diagram (pipeline flowchart). Zero external data badge.
+Slide 4
+The AOI Innovation — The formula. Explain M, Dt, D, junction multiplier. Show why this is a defensible congestion proxy.
+Slide 5
+Hotspot Intelligence — Screenshot of 3D hex pillar map. Top 5 zones with AOI scores. 'Koramangala 5th Block: AOI 88/100.'
+Slide 6
+Prediction Engine — Multi-horizon forecast chart. T+1h/T+2h/T+4h accuracy metrics. 'We see gridlock before it forms.'
+Slide 7
+Enforcement Optimization — Patrol schedule matrix. One dispatch alert example. Enforcement ROI bar chart.
+Slide 8
+What-If Simulation — Side-by-side map screenshot. Current pattern vs AI pattern. -28% violations, -21% congestion.
+Slide 9
+Repeat Offender Intelligence — Top 5 vehicle numbers with violation count. 'Vehicle FKN00GL14: 23 violations, 8 zones.'
+Slide 10
+Impact Quantification — Expected city-wide impact: X% reduction in peak congestion, Y towing unit deployments optimized, Z enforcement hours saved per week.
+Slide 11
+Architecture — Clean stack diagram. Emphasize: zero external data, deployable today, scalable to full city.
+Slide 12
+Team — Names, roles, and one sentence each on what you built.
+
+11. Execution Timeline
+Day 1 — June 16
+Setup GitHub repo. EDA notebook. Feature engineering pipeline. Data cleaned and parquet saved.
+Day 2 — June 17
+H3 spatial binning complete. HDBSCAN clustering done. AOI computed for all records. Folium heatmap working.
+Day 3 — June 18
+LightGBM models trained (T+1h, T+2h, T+4h). Validation metrics computed. Repeat offender scoring done.
+Day 4 — June 19
+Patrol optimizer complete. FastAPI backend running (all 5 endpoints). PyDeck 3D map integrated.
+Day 5 — June 20
+Full Streamlit dashboard (all 5 pages). What-if simulator working. End-to-end demo tested. Zero crashes.
+Day 6 — June 21
+README written. Demo video recorded (3-5 min). PPT finalized. Deployed to Streamlit Community Cloud. Submission submitted.
+
+12. Submission Checklist
+PPT / Slides
+12-slide deck exported as PDF. Uploaded to HackerEarth.
+Video URL
+3-5 min screen recording. Uploaded to YouTube (unlisted). URL submitted.
+Demo Link
+Streamlit Community Cloud deployment URL. Live and accessible.
+GitHub Repo
+Public repo. README with setup instructions, architecture diagram, requirements.txt.
+Source Code
+All Python scripts committed. No hardcoded paths. requirements.txt complete.
+Running Instructions
+Single command setup: pip install -r requirements.txt && streamlit run app/main.py
+Dataset
+Only HackerEarth-provided CSV used. No external data. README explicitly states this.
+
+GridLock IQ
+Built for Bengaluru. Powered by data. Zero external datasets.

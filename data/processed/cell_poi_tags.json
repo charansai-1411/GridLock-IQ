@@ -1,0 +1,1262 @@
+{
+  "87618925cffffff": {
+    "poi_label": "UCO Bank Junction",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Adugodi"
+  },
+  "876189272ffffff": {
+    "poi_label": "Gear School Road",
+    "poi_type": "educational",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Bellandur"
+  },
+  "8760145a3ffffff": {
+    "poi_label": "Attiguppe Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Byatarayanapura"
+  },
+  "8760145b4ffffff": {
+    "poi_label": "Subbanna Junction",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Upparpet"
+  },
+  "8761892e9ffffff": {
+    "poi_label": "Safina Plaza Junction",
+    "poi_type": "mall",
+    "junction_type_ord": 3,
+    "source": "junction_name",
+    "police_station": "Shivajinagar"
+  },
+  "876014586ffffff": {
+    "poi_label": "Shankara Mutt Circle, Vijayanagar",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Vijayanagara"
+  },
+  "8761892e2ffffff": {
+    "poi_label": "New Police Station Road",
+    "poi_type": "transit_station",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "K.R. Pura"
+  },
+  "8760145b5ffffff": {
+    "poi_label": "Elite Junction",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Upparpet"
+  },
+  "876189242ffffff": {
+    "poi_label": "The Metropolitan Cooperative Housing Society",
+    "poi_type": "metro_station",
+    "junction_type_ord": 4,
+    "source": "location",
+    "police_station": "HSR Layout"
+  },
+  "876189249ffffff": {
+    "poi_label": "Nadaprabhu Kempegowda Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Thalagattapura"
+  },
+  "876189273ffffff": {
+    "poi_label": "Amrutha College Road",
+    "poi_type": "educational",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Bellandur"
+  },
+  "876189209ffffff": {
+    "poi_label": "Star Market Road",
+    "poi_type": "market",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "HAL Old Airport"
+  },
+  "876189255ffffff": {
+    "poi_label": "NIFT College",
+    "poi_type": "educational",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "HSR Layout"
+  },
+  "876016965ffffff": {
+    "poi_label": "Sri Chigaru Marappa Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Kodigehalli"
+  },
+  "876014596ffffff": {
+    "poi_label": "Sri Chigaru Marappa Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Kodigehalli"
+  },
+  "87601459effffff": {
+    "poi_label": "Swathi Petrol / Gas Station",
+    "poi_type": "transit_station",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Chikkabanavara"
+  },
+  "8760145b0ffffff": {
+    "poi_label": "Shivananda Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Malleshwaram"
+  },
+  "8761892ecffffff": {
+    "poi_label": "Market Circle",
+    "poi_type": "market",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "Jeevanbheemanagar"
+  },
+  "876189263ffffff": {
+    "poi_label": "Venkateshwara Techno Park",
+    "poi_type": "park",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Electronic City"
+  },
+  "8760145b6ffffff": {
+    "poi_label": "Windsor Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "High ground"
+  },
+  "8760145a0ffffff": {
+    "poi_label": "Gali Anjaneya Temple",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Byatarayanapura"
+  },
+  "8761892e0ffffff": {
+    "poi_label": "Brigade Metropolis",
+    "poi_type": "metro_station",
+    "junction_type_ord": 4,
+    "source": "location",
+    "police_station": "Mahadevapura"
+  },
+  "876189240ffffff": {
+    "poi_label": "Metro Urbano",
+    "poi_type": "metro_station",
+    "junction_type_ord": 4,
+    "source": "location",
+    "police_station": "Hulimavu"
+  },
+  "876189254ffffff": {
+    "poi_label": "Bangalore Central Mall Bellandur",
+    "poi_type": "mall",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "Bellandur"
+  },
+  "8761892e3ffffff": {
+    "poi_label": "Market Road",
+    "poi_type": "market",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "K.R. Pura"
+  },
+  "8760145b3ffffff": {
+    "poi_label": "Modi Bridge Junction",
+    "poi_type": "bridge",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Malleshwaram"
+  },
+  "876016905ffffff": {
+    "poi_label": "Chikkajala",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Chikkajala"
+  },
+  "876014580ffffff": {
+    "poi_label": "Malleshwar Layout",
+    "poi_type": "mall",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "Kamakshipalya"
+  },
+  "876189271ffffff": {
+    "poi_label": "Amrutha College Road",
+    "poi_type": "educational",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Electronic City"
+  },
+  "876014583ffffff": {
+    "poi_label": "Peenya",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Peenya"
+  },
+  "87618920bffffff": {
+    "poi_label": "Marathahalli Police Station",
+    "poi_type": "transit_station",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "HAL Old Airport"
+  },
+  "876014584ffffff": {
+    "poi_label": "Marenahalli Junction, Vijayanagar",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Vijayanagara"
+  },
+  "8761892edffffff": {
+    "poi_label": "ASC Junction",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Halasur"
+  },
+  "876189253ffffff": {
+    "poi_label": "17th Main, Doopanahalli Bus Stop",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Jeevanbheemanagar"
+  },
+  "8760145a2ffffff": {
+    "poi_label": "Hosahalli Metro Station",
+    "poi_type": "metro_station",
+    "junction_type_ord": 4,
+    "source": "junction_name",
+    "police_station": "Vijayanagara"
+  },
+  "87618921affffff": {
+    "poi_label": "Galaxy Orchid Park",
+    "poi_type": "park",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Mahadevapura"
+  },
+  "8760145b2ffffff": {
+    "poi_label": "Mekhri Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Malleshwaram"
+  },
+  "876189243ffffff": {
+    "poi_label": "16th Main Road, BTM Layout",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Mico Layout"
+  },
+  "876189259ffffff": {
+    "poi_label": "New Diagonal Road, Jayanagar",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Jayanagara"
+  },
+  "876016901ffffff": {
+    "poi_label": "Chikkajala",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Chikkajala"
+  },
+  "87618925bffffff": {
+    "poi_label": "NR Road, SP Road Junction",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Halasuru Gate"
+  },
+  "8760145b1ffffff": {
+    "poi_label": "Modi Bridge Junction",
+    "poi_type": "bridge",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Rajajinagar"
+  },
+  "8761892cbffffff": {
+    "poi_label": "Police Station Main Road",
+    "poi_type": "transit_station",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Kodigehalli"
+  },
+  "876189258ffffff": {
+    "poi_label": "10th Cross, Wilson Garden",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Mico Layout"
+  },
+  "87618925affffff": {
+    "poi_label": "Nanjappa Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Ashok Nagar"
+  },
+  "8760145a4ffffff": {
+    "poi_label": "Katriguppe Junction",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Banashankari"
+  },
+  "8761892c9ffffff": {
+    "poi_label": "Esteem Mall",
+    "poi_type": "mall",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "Hebbala"
+  },
+  "876014595ffffff": {
+    "poi_label": "People Tree Hospitals",
+    "poi_type": "hospital",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Yeshwanthpura"
+  },
+  "8761892cdffffff": {
+    "poi_label": "Dr BR Ambedkar College Road",
+    "poi_type": "educational",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "R.T. Nagar"
+  },
+  "876014590ffffff": {
+    "poi_label": "BEL Market",
+    "poi_type": "market",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "Jalahalli"
+  },
+  "876014512ffffff": {
+    "poi_label": "YGR Signature Mall",
+    "poi_type": "mall",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "Kengeri"
+  },
+  "876189276ffffff": {
+    "poi_label": "East Park Residences",
+    "poi_type": "park",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Whitefield"
+  },
+  "8761892e1ffffff": {
+    "poi_label": "Metro Parking",
+    "poi_type": "metro_station",
+    "junction_type_ord": 4,
+    "source": "location",
+    "police_station": "Mahadevapura"
+  },
+  "876189248ffffff": {
+    "poi_label": "Konanakunte Junction",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Thalagattapura"
+  },
+  "8761892c1ffffff": {
+    "poi_label": "Hennuru",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Hennuru"
+  },
+  "8760145acffffff": {
+    "poi_label": "Global City Tech Park Road",
+    "poi_type": "park",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Kengeri"
+  },
+  "8760145a6ffffff": {
+    "poi_label": "Tagore Park Junction",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Basavanagudi"
+  },
+  "876189219ffffff": {
+    "poi_label": "International Technology Park Bangalore",
+    "poi_type": "park",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Mahadevapura"
+  },
+  "876014585ffffff": {
+    "poi_label": "Mallathahalli Road",
+    "poi_type": "mall",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "Jnanabharathi"
+  },
+  "8761892e6ffffff": {
+    "poi_label": "Brigade Metropolis",
+    "poi_type": "metro_station",
+    "junction_type_ord": 4,
+    "source": "location",
+    "police_station": "Mahadevapura"
+  },
+  "8761892e4ffffff": {
+    "poi_label": "Euro School Road",
+    "poi_type": "educational",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "HAL Old Airport"
+  },
+  "8760145adffffff": {
+    "poi_label": "Kengeri Railway Station Road",
+    "poi_type": "transit_station",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Kengeri"
+  },
+  "87618924bffffff": {
+    "poi_label": "Kadirenahalli Cross",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "K.S. Layout"
+  },
+  "876014591ffffff": {
+    "poi_label": "Namma Metro Circle",
+    "poi_type": "metro_station",
+    "junction_type_ord": 4,
+    "source": "location",
+    "police_station": "Peenya"
+  },
+  "87601690cffffff": {
+    "poi_label": "Sadahalli Toll Plaza",
+    "poi_type": "commercial",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "Chikkajala"
+  },
+  "87618924affffff": {
+    "poi_label": "Sahasra Hospital, Jayanagar",
+    "poi_type": "hospital",
+    "junction_type_ord": 1,
+    "source": "junction_name",
+    "police_station": "J.P. Nagar"
+  },
+  "876014582ffffff": {
+    "poi_label": "Malleshwar Layout",
+    "poi_type": "mall",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "Rajajinagar"
+  },
+  "8761892f6ffffff": {
+    "poi_label": "K.R. Pura",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "K.R. Pura"
+  },
+  "876189264ffffff": {
+    "poi_label": "Electronic City",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Electronic City"
+  },
+  "8761892f4ffffff": {
+    "poi_label": "K.R. Pura",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "K.R. Pura"
+  },
+  "876014594ffffff": {
+    "poi_label": "Railway Station Road",
+    "poi_type": "transit_station",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Sadashivanagar"
+  },
+  "876189244ffffff": {
+    "poi_label": "Omkar Medicals",
+    "poi_type": "hospital",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Electronic City"
+  },
+  "8761892e5ffffff": {
+    "poi_label": "Grand Mall and Towers",
+    "poi_type": "mall",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "Mahadevapura"
+  },
+  "8760145a5ffffff": {
+    "poi_label": "Itmadu Junction",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Banashankari"
+  },
+  "8761892ccffffff": {
+    "poi_label": "Dr Ambedkar Medical College Road",
+    "poi_type": "hospital",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "K.G. Halli"
+  },
+  "876189359ffffff": {
+    "poi_label": "Electronic City",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Electronic City"
+  },
+  "8761892ddffffff": {
+    "poi_label": "Hennur Traffic Police Station",
+    "poi_type": "transit_station",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Hennuru"
+  },
+  "876189251ffffff": {
+    "poi_label": "Maharaja Junction",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Adugodi"
+  },
+  "8761892eaffffff": {
+    "poi_label": "Hennuru Junction",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Banaswadi"
+  },
+  "876016966ffffff": {
+    "poi_label": "Railway Station Road",
+    "poi_type": "transit_station",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Yelahanka"
+  },
+  "87618920affffff": {
+    "poi_label": "Ashwini Medical And General Store",
+    "poi_type": "hospital",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "HAL Old Airport"
+  },
+  "876014598ffffff": {
+    "poi_label": "Chikkabanavara",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Chikkabanavara"
+  },
+  "87618925dffffff": {
+    "poi_label": "GD Mara Junction",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Mico Layout"
+  },
+  "8760145a1ffffff": {
+    "poi_label": "Nayandahalli Junction",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "Byatarayanapura"
+  },
+  "8761892ebffffff": {
+    "poi_label": "Dr Ambedkar Medical College Road",
+    "poi_type": "hospital",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Pulikeshinagar(F.Town)"
+  },
+  "876014581ffffff": {
+    "poi_label": "Kamakshipalya",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Kamakshipalya"
+  },
+  "876189218ffffff": {
+    "poi_label": "Salarpuria GR Tech Park",
+    "poi_type": "park",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Whitefield"
+  },
+  "87618925effffff": {
+    "poi_label": "Mallappa Reddy Main Road",
+    "poi_type": "mall",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "Adugodi"
+  },
+  "87618926bffffff": {
+    "poi_label": "Prestige Park Square",
+    "poi_type": "park",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Hulimavu"
+  },
+  "876016964ffffff": {
+    "poi_label": "The Galleria Mall",
+    "poi_type": "mall",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "Yelahanka"
+  },
+  "87601459bffffff": {
+    "poi_label": "Bangalore Nelamangla Toll Plaza",
+    "poi_type": "commercial",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "No Police Station"
+  },
+  "87601458effffff": {
+    "poi_label": "Andhrahalli Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Kamakshipalya"
+  },
+  "876014592ffffff": {
+    "poi_label": "Gangamma Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Jalahalli"
+  },
+  "8761892c3ffffff": {
+    "poi_label": "Kothanur Police Station Road",
+    "poi_type": "transit_station",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Hennuru"
+  },
+  "8760144b5ffffff": {
+    "poi_label": "No Police Station",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "No Police Station"
+  },
+  "87618924cffffff": {
+    "poi_label": "Royal Meenakshi Mall",
+    "poi_type": "mall",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "Hulimavu"
+  },
+  "87618924effffff": {
+    "poi_label": "Delmia Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "junction_name",
+    "police_station": "J.P. Nagar"
+  },
+  "876014514ffffff": {
+    "poi_label": "Jnana Sweekar Public School",
+    "poi_type": "educational",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Thalagattapura"
+  },
+  "8761892f5ffffff": {
+    "poi_label": "Zero Tolerance Junction",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "K.R. Pura"
+  },
+  "8761892eeffffff": {
+    "poi_label": "Gopalan Signature Mall",
+    "poi_type": "mall",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "Banaswadi"
+  },
+  "8761892daffffff": {
+    "poi_label": "Chikkajala",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Chikkajala"
+  },
+  "87618920effffff": {
+    "poi_label": "Metro Cotton Bazzar",
+    "poi_type": "metro_station",
+    "junction_type_ord": 4,
+    "source": "location",
+    "police_station": "Whitefield"
+  },
+  "87601458cffffff": {
+    "poi_label": "Kamakshipalya",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Kamakshipalya"
+  },
+  "876014533ffffff": {
+    "poi_label": "Thalagattapura",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Thalagattapura"
+  },
+  "876016960ffffff": {
+    "poi_label": "Mother Dairy Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Yelahanka"
+  },
+  "876014516ffffff": {
+    "poi_label": "Dr Vishuvardhan Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "K.S. Layout"
+  },
+  "876016973ffffff": {
+    "poi_label": "Sir MVIT College Road",
+    "poi_type": "educational",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Chikkajala"
+  },
+  "8761892e8ffffff": {
+    "poi_label": "Bangalore Metropolitan Transport Corporation Quarters",
+    "poi_type": "metro_station",
+    "junction_type_ord": 4,
+    "source": "location",
+    "police_station": "Pulikeshinagar(F.Town)"
+  },
+  "876189208ffffff": {
+    "poi_label": "Rana Ramdev Medicals",
+    "poi_type": "hospital",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Whitefield"
+  },
+  "87601459cffffff": {
+    "poi_label": "Nelagedhrahalli Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Peenya"
+  },
+  "8760145aeffffff": {
+    "poi_label": "Mallathahalli Road",
+    "poi_type": "mall",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "Jnanabharathi"
+  },
+  "876014593ffffff": {
+    "poi_label": "Mallasandara Main Road",
+    "poi_type": "mall",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "Jalahalli"
+  },
+  "876189252ffffff": {
+    "poi_label": "Kemp Fort Mall",
+    "poi_type": "mall",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "HAL Old Airport"
+  },
+  "8760145a8ffffff": {
+    "poi_label": "Ambedkar Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Jnanabharathi"
+  },
+  "876189262ffffff": {
+    "poi_label": "Velankani Tech Park",
+    "poi_type": "park",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Electronic City"
+  },
+  "876189246ffffff": {
+    "poi_label": "Ramdev Medicals",
+    "poi_type": "hospital",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "HSR Layout"
+  },
+  "876016976ffffff": {
+    "poi_label": "Sir MVIT College Road",
+    "poi_type": "educational",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Chikkajala"
+  },
+  "8761892ceffffff": {
+    "poi_label": "Thanisandra Railway Station Road",
+    "poi_type": "transit_station",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Hennuru"
+  },
+  "876016904ffffff": {
+    "poi_label": "Devanahalli Airport",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Devanahalli Airport"
+  },
+  "876016910ffffff": {
+    "poi_label": "Dr Sri Shivakumara Swamiji Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Devanahalli Airport"
+  },
+  "8761892caffffff": {
+    "poi_label": "Metropolitan Cooperative Housing Society",
+    "poi_type": "metro_station",
+    "junction_type_ord": 4,
+    "source": "location",
+    "police_station": "Hebbala"
+  },
+  "876189266ffffff": {
+    "poi_label": "Elevated Section Electronic City Toll Plaza",
+    "poi_type": "commercial",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "Electronic City"
+  },
+  "87618921dffffff": {
+    "poi_label": "Svastha Hospital",
+    "poi_type": "hospital",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Whitefield"
+  },
+  "876016969ffffff": {
+    "poi_label": "Chikkabanavara",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Chikkabanavara"
+  },
+  "87601696dffffff": {
+    "poi_label": "Chikkabanavara",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Chikkabanavara"
+  },
+  "8761892c5ffffff": {
+    "poi_label": "Gandhi Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Hennuru"
+  },
+  "8761892c8ffffff": {
+    "poi_label": "Esteem Mall",
+    "poi_type": "mall",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "Hebbala"
+  },
+  "87601690effffff": {
+    "poi_label": "Akkalenahalli Mallena Halli",
+    "poi_type": "mall",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "Devanahalli Airport"
+  },
+  "876189228ffffff": {
+    "poi_label": "Dommansandra Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "No Police Station"
+  },
+  "876016911ffffff": {
+    "poi_label": "Old Bus Stand Down Road",
+    "poi_type": "bus_terminal",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Devanahalli Airport"
+  },
+  "876016975ffffff": {
+    "poi_label": "NITTE Meenakshi College Road",
+    "poi_type": "educational",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Yelahanka"
+  },
+  "876189260ffffff": {
+    "poi_label": "360 Degree Business Park",
+    "poi_type": "park",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Electronic City"
+  },
+  "876016962ffffff": {
+    "poi_label": "Naganahalli Junction",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Yelahanka"
+  },
+  "8761892dbffffff": {
+    "poi_label": "Nitesh Central Park",
+    "poi_type": "park",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Yelahanka"
+  },
+  "8761892dcffffff": {
+    "poi_label": "Hennuru",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Hennuru"
+  },
+  "876016961ffffff": {
+    "poi_label": "Mohammad Sab Palya Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Yelahanka"
+  },
+  "87601690dffffff": {
+    "poi_label": "Chikkjala Junction",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Chikkajala"
+  },
+  "876016900ffffff": {
+    "poi_label": "Devanahalli Airport",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Devanahalli Airport"
+  },
+  "87618921cffffff": {
+    "poi_label": "Mahadevapura",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Mahadevapura"
+  },
+  "87618921bffffff": {
+    "poi_label": "Mahadevapura",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Mahadevapura"
+  },
+  "87618934affffff": {
+    "poi_label": "Chandapura Junction",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Electronic City"
+  },
+  "876189256ffffff": {
+    "poi_label": "Yemalur Junction",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "HAL Old Airport"
+  },
+  "8761892c4ffffff": {
+    "poi_label": "Raghavendra Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Banaswadi"
+  },
+  "8760145aaffffff": {
+    "poi_label": "Mallathahalli",
+    "poi_type": "mall",
+    "junction_type_ord": 3,
+    "source": "location",
+    "police_station": "Jnanabharathi"
+  },
+  "87618935bffffff": {
+    "poi_label": "Electronic City",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Electronic City"
+  },
+  "876189274ffffff": {
+    "poi_label": "Electronic City",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Electronic City"
+  },
+  "876016974ffffff": {
+    "poi_label": "Hunsemarrenhalli Junction",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Chikkajala"
+  },
+  "876189241ffffff": {
+    "poi_label": "Jagdish Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Hulimavu"
+  },
+  "876189245ffffff": {
+    "poi_label": "Lake View Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Hulimavu"
+  },
+  "876016923ffffff": {
+    "poi_label": "Bengaluru IT Park",
+    "poi_type": "park",
+    "junction_type_ord": 1,
+    "source": "location",
+    "police_station": "Chikkajala"
+  },
+  "87618924dffffff": {
+    "poi_label": "Tippu Sultan Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Thalagattapura"
+  },
+  "8761892abffffff": {
+    "poi_label": "K.R. Pura",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "K.R. Pura"
+  },
+  "876016944ffffff": {
+    "poi_label": "Naganahalli Junction",
+    "poi_type": "junction",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Yelahanka"
+  },
+  "8761892f2ffffff": {
+    "poi_label": "K.R. Pura",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "K.R. Pura"
+  },
+  "876014588ffffff": {
+    "poi_label": "No Police Station",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "No Police Station"
+  },
+  "8761892d8ffffff": {
+    "poi_label": "Hennuru",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Hennuru"
+  },
+  "87601451effffff": {
+    "poi_label": "Kengeri",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Kengeri"
+  },
+  "87601459affffff": {
+    "poi_label": "Chikkabanavara",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Chikkabanavara"
+  },
+  "876016902ffffff": {
+    "poi_label": "Devanahalli Airport",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Devanahalli Airport"
+  },
+  "876014511ffffff": {
+    "poi_label": "Thalagattapura",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Thalagattapura"
+  },
+  "87601451affffff": {
+    "poi_label": "Kengeri",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Kengeri"
+  },
+  "876014518ffffff": {
+    "poi_label": "Kengeri",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Kengeri"
+  },
+  "87601451dffffff": {
+    "poi_label": "Kengeri",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Kengeri"
+  },
+  "87618920cffffff": {
+    "poi_label": "Whitefield",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Whitefield"
+  },
+  "87601692affffff": {
+    "poi_label": "Chikkajala",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Chikkajala"
+  },
+  "876189229ffffff": {
+    "poi_label": "No Police Station",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "No Police Station"
+  },
+  "876189201ffffff": {
+    "poi_label": "Whitefield",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Whitefield"
+  },
+  "8761892c0ffffff": {
+    "poi_label": "Gowdara Patel Hanumanthaiah Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Hennuru"
+  },
+  "8760145abffffff": {
+    "poi_label": "Jnanabharathi",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Jnanabharathi"
+  },
+  "87618926affffff": {
+    "poi_label": "Hulimavu",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Hulimavu"
+  },
+  "8760144a2ffffff": {
+    "poi_label": "No Police Station",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "No Police Station"
+  },
+  "87601692bffffff": {
+    "poi_label": "Chikkajala",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Chikkajala"
+  },
+  "87601459dffffff": {
+    "poi_label": "Sri Sallapuradamma Circle",
+    "poi_type": "traffic_circle",
+    "junction_type_ord": 2,
+    "source": "location",
+    "police_station": "Kamakshipalya"
+  },
+  "876016922ffffff": {
+    "poi_label": "Chikkajala",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Chikkajala"
+  },
+  "876016972ffffff": {
+    "poi_label": "Chikkajala",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Chikkajala"
+  },
+  "876189203ffffff": {
+    "poi_label": "Whitefield",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Whitefield"
+  },
+  "876014510ffffff": {
+    "poi_label": "Thalagattapura",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Thalagattapura"
+  },
+  "87601680cffffff": {
+    "poi_label": "No Police Station",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "No Police Station"
+  },
+  "8761892a9ffffff": {
+    "poi_label": "K.R. Pura",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "K.R. Pura"
+  },
+  "876016913ffffff": {
+    "poi_label": "Devanahalli Airport",
+    "poi_type": "area",
+    "junction_type_ord": 1,
+    "source": "police_station",
+    "police_station": "Devanahalli Airport"
+  }
+}

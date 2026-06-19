@@ -1,0 +1,54 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+
+# ── Virtual Environment ───────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+
+# ── Data — raw CSV (large, sensitive) ────────────────────────────────────────
+data/raw/
+
+# ── Data — intermediate / derived parquets (reproducible from pipeline) ──────
+# Keep only the final outputs needed to run the dashboard without retraining
+data/processed/cleaned.parquet
+data/processed/h3_zones.parquet
+data/processed/forecast_features.parquet
+
+# ── Jupyter / Notebooks ───────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ── Streamlit ────────────────────────────────────────────────────────────────
+.streamlit/secrets.toml
+
+# ── IDE & OS ──────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Logs & temp ───────────────────────────────────────────────────────────────
+*.log
+*.tmp
+*.bak
+scratch/
+
+# ── Test artifacts ────────────────────────────────────────────────────────────
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
