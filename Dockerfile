@@ -1,5 +1,5 @@
-# Use a slim Python image
-FROM python:3.10-slim
+# Use the standard Python image which comes pre-packed with build-essential tools
+FROM python:3.10
 
 # Set working directory
 WORKDIR /app
@@ -7,8 +7,8 @@ WORKDIR /app
 # Copy requirements file first to leverage Docker caching
 COPY requirements.txt .
 
-# Install dependencies (using --prefer-binary to use precompiled wheels and avoid compiling packages like hdbscan)
-RUN pip3 install --no-cache-dir --prefer-binary -r requirements.txt
+# Install dependencies (they will compile successfully using pre-installed compilers)
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code
 COPY . .
