@@ -43,11 +43,26 @@ def load_all_data(data_file_versions):
         df_clustered_zones = pd.read_parquet(CLUSTERED_ZONES_PATH)
 
     if os.path.exists(FORECAST_RESULTS_PATH):
-        df_forecast = pd.read_parquet(FORECAST_RESULTS_PATH)
+        # Load only the 12 columns referenced by the app pages
+        FORECAST_COLS = [
+            "h3_cell", "hour_dt", "violation_count", "latitude", "longitude",
+            "cell_vehicle_mass", "junction_flag", "AOI", "historical_density",
+            "pred_t1", "pred_t2", "pred_t4"
+        ]
+        df_forecast = pd.read_parquet(FORECAST_RESULTS_PATH, columns=FORECAST_COLS)
         df_forecast["hour_dt"] = pd.to_datetime(df_forecast["hour_dt"])
+        
+        # Downcast floats to float32 and junction_flag to int8 to save over 120MB memory
+        float_cols = [
+            "violation_count", "latitude", "longitude", "cell_vehicle_mass",
+            "AOI", "historical_density", "pred_t1", "pred_t2", "pred_t4"
+        ]
+        df_forecast["junction_flag"] = df_forecast["junction_flag"].astype("int8")
+        df_forecast[float_cols] = df_forecast[float_cols].astype("float32")
 
     if os.path.exists(REPEAT_OFFENDERS_PATH):
-        df_repeat_offenders = pd.read_parquet(REPEAT_OFFENDERS_PATH)
+        # Load only the top 5000 repeat offenders to save ~88MB memory
+        df_repeat_offenders = pd.read_parquet(REPEAT_OFFENDERS_PATH).head(5000)
 
     return df_clustered_zones, df_forecast, df_repeat_offenders, station_map
 
