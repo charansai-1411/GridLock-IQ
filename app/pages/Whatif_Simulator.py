@@ -243,11 +243,14 @@ def render_simulator_page():
     cov_color_B = "#2ecc71" if highest_row['opt_officers'] > 0 else "#ff4444"
     
     # Card 4: AI Coverage Efficiency
-    ieu_covered_A = (df_hour.loc[df_hour['base_officers'] > 0, 'pred_t1']).sum()
-    ieu_covered_B = (df_hour.loc[df_hour['opt_officers'] > 0, 'pred_t1']).sum()
+    base_deployed = df_hour['base_officers'].sum()
+    opt_deployed = df_hour['opt_officers'].sum()
     
-    eff_A = ieu_covered_A / total_officers if total_officers > 0 else 0
-    eff_B = ieu_covered_B / total_officers if total_officers > 0 else 0
+    mitigated_A = (df_hour['pred_t1'] - df_hour['base_post_aoi']).sum()
+    mitigated_B = (df_hour['pred_t1'] - df_hour['opt_post_aoi']).sum()
+    
+    eff_A = mitigated_A / base_deployed if base_deployed > 0 else 0
+    eff_B = mitigated_B / opt_deployed if opt_deployed > 0 else 0
     eff_ratio = eff_B / eff_A if eff_A > 0 else 1.0
     
     # ─── Component 2: KPI Cards Row ──────────────────────────────────────────
