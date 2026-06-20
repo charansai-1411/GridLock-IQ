@@ -7,7 +7,10 @@ WORKDIR /app
 # Copy requirements file first to leverage Docker caching
 COPY requirements.txt .
 
-# Install dependencies (they will compile successfully using pre-installed compilers)
+# Set compiler flags to allow cython compilation warnings to pass without errors on newer compilers
+ENV CFLAGS="-Wno-error=incompatible-pointer-types"
+
+# Install dependencies (they will compile successfully using pre-installed compilers and customized compiler flags)
 RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code
