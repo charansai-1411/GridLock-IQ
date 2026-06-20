@@ -327,33 +327,54 @@ def render_overview():
     # ════════════════════════════════════════════════════════════════
     #  COMPONENT 1 — HEADER STRIP (slim, 48px)
     # ════════════════════════════════════════════════════════════════
-    st.markdown(f"""
-    <style>
-    @keyframes pulse {{
-        0% {{ opacity: 1; }}
-        50% {{ opacity: 0.3; }}
-        100% {{ opacity: 1; }}
-    }}
-    .live-dot {{ animation: pulse 1.8s ease-in-out infinite; }}
-    .header-strip {{
-        display: flex; align-items: center; justify-content: space-between;
-        background: {BACKGROUND}; border-bottom: 1px solid {BORDER};
-        padding: 0 8px; height: 48px; margin: -1rem -1rem 1.2rem -1rem;
-        font-family: 'Outfit', sans-serif;
-    }}
-    .header-left {{ font-size: 15px; font-weight: 800; color: {TEXT_PRI}; white-space: nowrap; }}
-    .header-center {{ font-size: 12px; color: {TEXT_SEC}; display: flex; align-items: center; gap: 6px; }}
-    .header-right {{ font-size: 11px; color: {TEXT_SEC}; text-align: right; white-space: nowrap; }}
-    </style>
-    <div class="header-strip">
-        <div class="header-left">🚨 GridLock IQ &nbsp;—&nbsp; Bengaluru Command Center</div>
-        <div class="header-center">
-            <span class="live-dot" style="color:{live_color}; font-size:16px;">●</span>
-            <span>{'LIVE' if is_fresh else 'STALE'} &nbsp;|&nbsp; Data as of {data_label}</span>
+    col_header, col_picker = st.columns([3.2, 0.8])
+    with col_header:
+        st.markdown(f"""
+        <style>
+        @keyframes pulse {{
+            0% {{ opacity: 1; }}
+            50% {{ opacity: 0.3; }}
+            100% {{ opacity: 1; }}
+        }}
+        .live-dot {{ animation: pulse 1.8s ease-in-out infinite; }}
+        .header-strip {{
+            display: flex; align-items: center; justify-content: space-between;
+            background: {BACKGROUND}; border-bottom: 1px solid {BORDER};
+            padding: 0 8px; height: 48px; margin: -1rem -1rem 1.2rem -1rem;
+            font-family: 'Outfit', sans-serif;
+        }}
+        .header-left {{ font-size: 15px; font-weight: 800; color: {TEXT_PRI}; white-space: nowrap; }}
+        .header-center {{ font-size: 12px; color: {TEXT_SEC}; display: flex; align-items: center; gap: 6px; }}
+        .header-right {{ font-size: 11px; color: {TEXT_SEC}; text-align: right; white-space: nowrap; }}
+        </style>
+        <div class="header-strip">
+            <div class="header-left">🚨 GridLock IQ &nbsp;—&nbsp; Command Center</div>
+            <div class="header-center">
+                <span class="live-dot" style="color:{live_color}; font-size:16px;">●</span>
+                <span>{'LIVE' if is_fresh else 'STALE'} &nbsp;|&nbsp; Data as of {data_label}</span>
+            </div>
+            <div class="header-right">Window: {target_ts.strftime('%Y-%m-%d %I:%M %p')}</div>
         </div>
-        <div class="header-right">Window: {target_ts.strftime('%Y-%m-%d %I:%M %p')}</div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+    with col_picker:
+        with st.popover("📅 Change Hour", use_container_width=True):
+            all_times_ist = pd.DatetimeIndex(df_forecast['hour_dt'].unique()).tz_convert("Asia/Kolkata")
+            unique_dates = sorted(list(set(all_times_ist.date)))
+            
+            target_ts_ist = target_ts.tz_convert("Asia/Kolkata") if target_ts.tzinfo else target_ts
+            sel_date = st.date_input("Select Date", value=target_ts_ist.date(), min_value=min(unique_dates), max_value=max(unique_dates), key="ov_date_picker")
+            
+            available_hours = sorted(list(set([t.hour for t in all_times_ist if t.date() == sel_date])))
+            if not available_hours:
+                available_hours = list(range(24))
+                
+            rounded_hour = (target_ts_ist + pd.Timedelta(minutes=30)).hour
+            sel_hour = st.selectbox("Select Hour", options=available_hours, format_func=lambda h: f"{h:02d}:00", index=available_hours.index(rounded_hour) if rounded_hour in available_hours else 0, key="ov_hour_picker")
+            
+            if st.button("Apply Changes", use_container_width=True, key="ov_apply_btn"):
+                new_ts_local = pd.Timestamp(f"{sel_date} {sel_hour:02d}:00:00", tz="Asia/Kolkata")
+                st.session_state['selected_time'] = new_ts_local.tz_convert("UTC")
+                st.rerun()
 
     # ════════════════════════════════════════════════════════════════
     #  COMPONENT 2 — KPI CARDS (5 cards)

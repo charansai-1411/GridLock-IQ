@@ -3,7 +3,7 @@ PRODUCT REQUIREMENT DOCUMENT
 GridLock IQ
 Spatio-Temporal Parking Intelligence & Predictive Resource Optimization Engine
 
-Flipkart Grid 5.0  |  Round 2  |  Theme 1
+Flipkart GridLock 2.0  |  Round 2  |  Theme 1
 Poor Visibility on Parking-Induced Congestion
 Submission Deadline: June 21, 2026
 
@@ -12,7 +12,7 @@ GridLock IQ
 Version
 1.0.0 — Final
 Competition
-Flipkart Grid 5.0 — Round 2
+Flipkart GridLock 2.0 — Round 2
 Theme
 Theme 1: Parking-Induced Congestion
 Target User

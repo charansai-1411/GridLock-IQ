@@ -1,7 +1,7 @@
 # 🚨 GridLock IQ
 ### Predictive Parking Intelligence & Enforcement Optimization System
 
-> **Flipkart Grid 5.0 — Problem Statement: Poor Visibility on Parking-Induced Congestion**  
+> **Flipkart GridLock 2.0 — Problem Statement: Poor Visibility on Parking-Induced Congestion**  
 > Bengaluru Traffic Police · H3 Spatial Indexing (Resolution 7) · LightGBM Delta Model · Streamlit Dashboard
 
 ---
@@ -189,7 +189,7 @@ gridlock-iq/
 
 ## Dataset
 
-**Source:** Bengaluru Traffic Violation citation dataset provided by HackerEarth (Flipkart Grid 5.0).
+**Source:** Bengaluru Traffic Violation citation dataset provided by HackerEarth (Flipkart GridLock 2.0).
 
 **Important context:** Each row is a violation citation issued by a traffic officer — not a ground-truth sensor measurement. This means:
 - Coverage depends on patrol routes and officer presence
@@ -496,7 +496,7 @@ python audits/model_accuracy.py
 
 ## Acknowledgments
 
-- **Dataset:** Flipkart Grid 5.0 / HackerEarth — Bengaluru Traffic Violation data
+- **Dataset:** Flipkart GridLock 2.0 / HackerEarth — Bengaluru Traffic Violation data
 - **Spatial Indexing:** Uber H3 library (Resolution 7)
 - **Map Tiles:** Leaflet.js + Carto Dark (free, no API key required)
 - **Institution:** Chaitanya Bharathi Institute of Technology (CBIT), Hyderabad
@@ -505,7 +505,7 @@ python audits/model_accuracy.py
 
 ## License
 
-Built for Flipkart Grid 5.0 hackathon. Dataset used under HackerEarth competition terms.
+Built for Flipkart GridLock 2.0 hackathon. Dataset used under HackerEarth competition terms.
 
 ---
 
