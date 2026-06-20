@@ -57,57 +57,18 @@ def _ieu_tier(ieu):
 
 # ─── Zone classification (cached) ─────────────────────────────────────────────
 @st.cache_data(show_spinner=False)
-def compute_zone_classifications(fc_hash: str, _df_fc):
+def compute_zone_classifications(fc_hash: str = "", _df_fc = None):
     """
-    Classify each H3 cell as CHRONIC / EPISODIC / RANDOM.
-    fc_hash is used only as cache key — pass str(df.shape) or a hash.
+    Load precomputed H3 cell classifications from JSON.
     """
-    df = _df_fc.copy()
-    df["year_week"]  = df["hour_dt"].dt.strftime("%Y-W%V")
-    df["weekday"]    = df["hour_dt"].dt.dayofweek
-    df["local_hour"] = (df["hour_dt"].dt.hour + 5) % 24   # rough IST
-
-    n_weeks = df["year_week"].nunique()
-
-    # Chronic: in top-20 by AOI for ≥80% of weeks
-    weekly = df.groupby(["year_week", "h3_cell"])["AOI"].mean().reset_index()
-    weekly["rank"] = weekly.groupby("year_week")["AOI"].rank(ascending=False)
-    weeks_in_top20 = (
-        weekly[weekly["rank"] <= 20]
-        .groupby("h3_cell")["year_week"]
-        .nunique()
-    )
-    chronic_cells = set(
-        weeks_in_top20[weeks_in_top20 >= n_weeks * 0.80].index.tolist()
-    )
-
-    # Episodic: weekend or evening disproportionate spike
-    def ratios(grp):
-        base = grp["AOI"].mean()
-        if base < 1.0:
-            return pd.Series({"wknd": 0.0, "evng": 0.0})
-        wknd = grp.loc[grp["weekday"].isin([4, 5, 6]), "AOI"].mean()
-        evng = grp.loc[grp["local_hour"].between(17, 21), "AOI"].mean()
-        return pd.Series({"wknd": (wknd or 0) / base, "evng": (evng or 0) / base})
-
-    cell_ratios = df.groupby("h3_cell").apply(ratios)
-    episodic_cells = set(
-        cell_ratios[
-            (~cell_ratios.index.isin(chronic_cells)) &
-            ((cell_ratios["wknd"] > 1.3) | (cell_ratios["evng"] > 1.3))
-        ].index.tolist()
-    )
-
-    result = {}
-    for cell in df["h3_cell"].unique():
-        if cell in chronic_cells:
-            result[cell] = "CHRONIC"
-        elif cell in episodic_cells:
-            result[cell] = "EPISODIC"
-        else:
-            result[cell] = "RANDOM"
-
-    return result
+    path = os.path.join(PROJECT_ROOT, "data", "processed", "zone_classifications.json")
+    if os.path.exists(path):
+        try:
+            with open(path, "r") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error loading zone_classifications.json: {e}")
+    return {}
 
 # ─── Build per-horizon GeoJSON + table rows ────────────────────────────────────
 def build_horizon_data(df_hour, zone_classes, station_map, poi_tags, cell_veh):
@@ -949,19 +910,14 @@ def render_prediction_engine():
     fc_hash = str(df_fc.shape)
     zone_classes = compute_zone_classifications(fc_hash, df_fc)
 
-    # ── Available timestamps ────────────────────────────────────────────
-    available_hours = (
-        df_fc["hour_dt"]
-        .dt.tz_convert("Asia/Kolkata")
-        .sort_values()
-        .unique()
-    )
-    peak_idx = int(
-        pd.Series([df_fc[df_fc["hour_dt"] == h]["AOI"].sum() for h in
-                   df_fc["hour_dt"].unique()])
-        .argmax()
-    )
-    peak_ts_utc = df_fc.groupby("hour_dt")["AOI"].sum().idxmax()
+    # ── Available timestamps from metadata ──────────────────────────────
+    df_forecast_hours = st.session_state.get("df_forecast_hours")
+    all_utc_idx = pd.DatetimeIndex(df_forecast_hours["hour_dt"].unique())
+    all_times_ist = all_utc_idx.tz_convert("Asia/Kolkata")
+
+    # Globally selected time as default
+    selected_time_utc = st.session_state.get("selected_time", all_utc_idx.max())
+    default_ts_ist = pd.Timestamp(selected_time_utc).tz_convert("Asia/Kolkata")
 
     # ── Page header ─────────────────────────────────────────────────────
     st.markdown(
@@ -979,11 +935,9 @@ def render_prediction_engine():
     c1, c2, c3 = st.columns([1.4, 1.0, 4])
 
     # Build date options
-    all_dates_local = sorted(set(
-        pd.Timestamp(h).tz_convert("Asia/Kolkata").date() for h in df_fc["hour_dt"].unique()
-    ))
-    default_date = pd.Timestamp(peak_ts_utc).tz_convert("Asia/Kolkata").date()
+    all_dates_local = sorted(set(all_times_ist.date))
     date_labels  = [str(d) for d in all_dates_local]
+    default_date = default_ts_ist.date()
     default_di   = date_labels.index(str(default_date)) if str(default_date) in date_labels else 0
 
     with c1:
@@ -995,12 +949,10 @@ def render_prediction_engine():
 
     # Hours available for that date
     day_hours = sorted(set(
-        pd.Timestamp(h).tz_convert("Asia/Kolkata").hour
-        for h in df_fc["hour_dt"].unique()
-        if pd.Timestamp(h).tz_convert("Asia/Kolkata").date() == sel_date
+        t.hour for t in all_times_ist if t.date() == sel_date
     ))
-    default_h = pd.Timestamp(peak_ts_utc).tz_convert("Asia/Kolkata").hour
     hour_labels = [f"{h:02d}:00" for h in day_hours]
+    default_h = default_ts_ist.hour
     default_hi  = hour_labels.index(f"{default_h:02d}:00") if f"{default_h:02d}:00" in hour_labels else 0
 
     with c2:
@@ -1021,9 +973,18 @@ def render_prediction_engine():
     snap_str     = sel_ts_local.strftime("%Y-%m-%d %I:%M %p IST")
 
     # Find nearest available hour
-    all_utc_idx  = pd.DatetimeIndex(df_fc["hour_dt"].unique())
     deltas       = np.abs((all_utc_idx - sel_ts_utc).total_seconds())
     nearest      = all_utc_idx[int(np.argmin(deltas))]
+
+    # Sync back to session state silently and update data if it changed
+    if nearest != st.session_state.get('selected_time'):
+        st.session_state['selected_time'] = nearest
+        from app.data_state import update_filtered_data
+        update_filtered_data()
+        df_fc = st.session_state.get('df_forecast')
+        df_fc = df_fc.copy()
+        df_fc["hour_dt"] = pd.to_datetime(df_fc["hour_dt"])
+
     df_hour      = df_fc[df_fc["hour_dt"] == nearest].copy()
 
     # ── Vehicle breakdown (from violations) ────────────────────────────

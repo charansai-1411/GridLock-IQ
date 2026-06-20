@@ -167,9 +167,15 @@ def get_patrol_timeline_data(df_forecast, target_ts, station_map):
     """Retrieve timeline trend scores for top active zones."""
     df_hour = df_forecast[df_forecast['hour_dt'] == target_ts].copy()
     if df_hour.empty:
-        all_utc_idx = pd.DatetimeIndex(df_forecast['hour_dt'].unique())
+        df_forecast_hours = st.session_state.get("df_forecast_hours")
+        all_utc_idx = pd.DatetimeIndex(df_forecast_hours['hour_dt'].unique()) if df_forecast_hours is not None else pd.DatetimeIndex(df_forecast['hour_dt'].unique())
         nearest_pos = np.abs((all_utc_idx - target_ts).total_seconds()).argmin()
         nearest = all_utc_idx[nearest_pos]
+        if nearest != target_ts:
+            st.session_state['selected_time'] = nearest
+            from app.data_state import update_filtered_data
+            update_filtered_data()
+            df_forecast = st.session_state.get("df_forecast")
         df_hour = df_forecast[df_forecast['hour_dt'] == nearest].copy()
         
     top_zones = df_hour.sort_values('pred_t1', ascending=False).head(6)
@@ -298,8 +304,9 @@ def render_optimizer_page():
     with col_picker:
         # Date & Hour Selector Popover
         with st.popover("📅 Change Hour", use_container_width=True):
-            # Extract unique dates from forecast data mapped to Asia/Kolkata
-            all_times_ist = pd.DatetimeIndex(df_forecast['hour_dt'].unique()).tz_convert("Asia/Kolkata")
+            # Extract unique dates from forecast metadata mapped to Asia/Kolkata
+            df_forecast_hours = st.session_state.get("df_forecast_hours")
+            all_times_ist = pd.DatetimeIndex(df_forecast_hours['hour_dt'].unique()).tz_convert("Asia/Kolkata")
             unique_dates = sorted(list(set(all_times_ist.date)))
             
             sel_date = st.date_input("Select Snapshot Date", value=target_ts_ist.date(), min_value=min(unique_dates), max_value=max(unique_dates))
@@ -320,9 +327,15 @@ def render_optimizer_page():
     # Get hour dataset
     df_hour = df_forecast[df_forecast['hour_dt'] == target_ts].copy()
     if df_hour.empty:
-        all_utc_idx = pd.DatetimeIndex(df_forecast['hour_dt'].unique())
+        df_forecast_hours = st.session_state.get("df_forecast_hours")
+        all_utc_idx = pd.DatetimeIndex(df_forecast_hours['hour_dt'].unique())
         nearest_pos = np.abs((all_utc_idx - target_ts).total_seconds()).argmin()
         nearest = all_utc_idx[nearest_pos]
+        if nearest != target_ts:
+            st.session_state['selected_time'] = nearest
+            from app.data_state import update_filtered_data
+            update_filtered_data()
+            df_forecast = st.session_state.get("df_forecast")
         df_hour = df_forecast[df_forecast['hour_dt'] == nearest].copy()
         
     top_10 = df_hour.sort_values('pred_t1', ascending=False).head(10)

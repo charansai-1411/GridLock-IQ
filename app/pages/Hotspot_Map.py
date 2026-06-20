@@ -42,17 +42,15 @@ def _cell_geojson_ring(cell_id):
         return []
 
 
-def _zone_class(cell_id, df_all):
-    cd = df_all[df_all["h3_cell"] == cell_id]
-    if cd.empty:
-        return "LOW RISK"
-    active_pct = (cd["AOI"] > 5.0).sum() / max(len(cd), 1)
-    mean_aoi   = float(cd["AOI"].mean())
-    max_aoi    = float(cd["AOI"].max())
-    if mean_aoi >= 12.0 and active_pct >= 0.35:
-        return "STRUCTURAL"
-    if max_aoi >= 50.0 and active_pct < 0.35:
-        return "EVENT-DRIVEN"
+def _zone_class(cell_id, df_all=None):
+    path = os.path.join(PROJECT_ROOT, "data", "processed", "hotspot_zone_classifications.json")
+    if os.path.exists(path):
+        try:
+            with open(path, "r") as f:
+                classes = json.load(f)
+                return classes.get(cell_id, "LOW RISK")
+        except Exception as e:
+            print(f"Error loading hotspot_zone_classifications.json: {e}")
     return "LOW RISK"
 
 
@@ -635,26 +633,90 @@ def render_hotspot_map():
             st.cache_data.clear()
             st.rerun()
 
-    # ── Filter forecast window ────────────────────────────────────────────
-    peak_ts = df_fc.groupby("hour_dt")["AOI"].sum().idxmax()
-
-    if tw == "Single Hour":
-        fc_window = df_fc[df_fc["hour_dt"] == peak_ts]
-    elif tw == "Last 6 Hours":
-        fc_window = df_fc[(df_fc["hour_dt"] >= peak_ts - pd.Timedelta(hours=5)) &
-                          (df_fc["hour_dt"] <= peak_ts)]
-    elif tw == "Last 24 Hours":
-        fc_window = df_fc[(df_fc["hour_dt"] >= peak_ts - pd.Timedelta(hours=23)) &
-                          (df_fc["hour_dt"] <= peak_ts)]
+    # ── Query forecast window dynamically from DuckDB ─────────────────────
+    df_forecast_hours = st.session_state.get("df_forecast_hours")
+    selected_time = st.session_state.get("selected_time")
+    
+    # Align selected_time timezone to metadata's timezone
+    ref_ts = pd.to_datetime(selected_time)
+    tz = df_forecast_hours["hour_dt"].dt.tz
+    if tz is not None:
+        if ref_ts.tzinfo is None:
+            ref_ts = ref_ts.tz_localize(tz)
+        else:
+            ref_ts = ref_ts.tz_convert(tz)
     else:
-        fc_window = df_fc[(df_fc["hour_dt"] >= peak_ts - pd.Timedelta(days=7)) &
-                          (df_fc["hour_dt"] <= peak_ts)]
+        if ref_ts.tzinfo is not None:
+            ref_ts = ref_ts.tz_localize(None)
 
-    if fc_window is None or fc_window.empty:
-        fc_window = df_fc
+    # Calculate range based on time window selection
+    if tw == "Single Hour":
+        start_ts = ref_ts
+        end_ts = ref_ts + pd.Timedelta(hours=1) - pd.Timedelta(seconds=1)
+    elif tw == "Last 6 Hours":
+        start_ts = ref_ts - pd.Timedelta(hours=5)
+        end_ts = ref_ts
+    elif tw == "Last 24 Hours":
+        start_ts = ref_ts - pd.Timedelta(hours=23)
+        end_ts = ref_ts
+    else:
+        start_ts = ref_ts - pd.Timedelta(days=7)
+        end_ts = ref_ts
+
+    start_str = start_ts.strftime("%Y-%m-%d %H:%M:%S")
+    end_str = end_ts.strftime("%Y-%m-%d %H:%M:%S")
+
+    # Dynamic query to parquet via DuckDB
+    import duckdb
+    from config import PROCESSED_DATA_PATH
+    FORECAST_RESULTS_PATH = os.path.join(os.path.dirname(PROCESSED_DATA_PATH), "forecast_results.parquet")
+    con = duckdb.connect()
+    
+    query = f"""
+        SELECT h3_cell, hour_dt, violation_count, latitude, longitude,
+               cell_vehicle_mass, junction_flag, AOI, historical_density,
+               pred_t1, pred_t2, pred_t4
+        FROM '{FORECAST_RESULTS_PATH}'
+        WHERE hour_dt >= '{start_str}' AND hour_dt <= '{end_str}'
+    """
+    
+    try:
+        fc_window = con.execute(query).df()
+        fc_window["hour_dt"] = pd.to_datetime(fc_window["hour_dt"])
+        if tz is not None:
+            if fc_window["hour_dt"].dt.tz is None:
+                fc_window["hour_dt"] = fc_window["hour_dt"].dt.tz_localize("UTC").dt.tz_convert(tz)
+            else:
+                fc_window["hour_dt"] = fc_window["hour_dt"].dt.tz_convert(tz)
+        
+        # Downcast floats and junction_flag to save memory
+        float_cols = [
+            "violation_count", "latitude", "longitude", "cell_vehicle_mass",
+            "AOI", "historical_density", "pred_t1", "pred_t2", "pred_t4"
+        ]
+        fc_window["junction_flag"] = fc_window["junction_flag"].astype("int8")
+        fc_window[float_cols] = fc_window[float_cols].astype("float32")
+    except Exception as e:
+        print(f"Error querying DuckDB in Hotspot_Map: {e}")
+        fc_window = pd.DataFrame()
+    con.close()
+
+    if fc_window.empty:
+        # Construct empty df with fallback columns
+        fc_window = pd.DataFrame(columns=[
+            "h3_cell", "hour_dt", "violation_count", "latitude", "longitude",
+            "cell_vehicle_mass", "junction_flag", "AOI", "historical_density",
+            "pred_t1", "pred_t2", "pred_t4"
+        ])
+        fc_window["h3_cell"] = fc_window["h3_cell"].astype(str)
+        fc_window["hour_dt"] = pd.to_datetime(fc_window["hour_dt"])
+        fc_window["junction_flag"] = fc_window["junction_flag"].astype("int8")
+        for col in ["violation_count", "latitude", "longitude", "cell_vehicle_mass",
+                    "AOI", "historical_density", "pred_t1", "pred_t2", "pred_t4"]:
+            fc_window[col] = fc_window[col].astype("float32")
 
     # ── Build + render ────────────────────────────────────────────────────
-    geojson_str = build_geojson(fc_window, df_fc, None, station_map, poi_tags)
+    geojson_str = build_geojson(fc_window, fc_window, None, station_map, poi_tags)
     html_content = _build_html(geojson_str, tw)
     st.components.v1.html(html_content, height=700, scrolling=False)
 

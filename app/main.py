@@ -278,11 +278,12 @@ st.sidebar.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+df_forecast_hours = st.session_state.get("df_forecast_hours")
 df_forecast = st.session_state.get("df_forecast")
 
-if df_forecast is not None:
+if df_forecast_hours is not None:
     # Identify unique date-hours in the forecast parquet
-    unique_datetimes = sorted(df_forecast['hour_dt'].unique())
+    unique_datetimes = sorted(df_forecast_hours['hour_dt'].unique())
     max_dt = unique_datetimes[-1]
     
     # Enforce default busy hour (2024-03-12 03:00:00 UTC) if available in the dataset
@@ -297,10 +298,14 @@ if df_forecast is not None:
     
     # Compute timezone-aware ref_ts
     ref_ts = pd.to_datetime(selected_dt)
-    if df_forecast['hour_dt'].dt.tz is not None and ref_ts.tzinfo is None:
-        ref_ts = ref_ts.tz_localize(df_forecast['hour_dt'].dt.tz)
-    elif df_forecast['hour_dt'].dt.tz is None and ref_ts.tzinfo is not None:
-        ref_ts = ref_ts.tz_localize(None)
+    if df_forecast_hours['hour_dt'].dt.tz is not None:
+        if ref_ts.tzinfo is None:
+            ref_ts = ref_ts.tz_localize(df_forecast_hours['hour_dt'].dt.tz)
+        else:
+            ref_ts = ref_ts.tz_convert(df_forecast_hours['hour_dt'].dt.tz)
+    else:
+        if ref_ts.tzinfo is not None:
+            ref_ts = ref_ts.tz_localize(None)
 
     # Calculate peak predicted T+1h IEU dynamically
     df_hour = df_forecast[df_forecast['hour_dt'] == ref_ts]
@@ -370,52 +375,8 @@ if df_forecast is not None:
     </div>
     """, unsafe_allow_html=True)
 
-    # Retrieve time window from session state or initialize it
-    if 'time_window' not in st.session_state:
-        st.session_state['time_window'] = 'Single Hour'
-    window_opt = st.session_state['time_window']
-    
-    # Calculate start time based on selection
-    if window_opt == "Single Hour":
-        start_ts = ref_ts
-        end_ts = ref_ts + pd.Timedelta(hours=1) - pd.Timedelta(seconds=1)
-    elif "24 Hours" in window_opt:
-        start_ts = ref_ts - pd.Timedelta(hours=24)
-        end_ts = ref_ts
-    elif "7 Days" in window_opt:
-        start_ts = ref_ts - pd.Timedelta(days=7)
-        end_ts = ref_ts
-    elif "30 Days" in window_opt:
-        start_ts = ref_ts - pd.Timedelta(days=30)
-        end_ts = ref_ts
-    else: # All Time
-        start_ts = df_forecast['hour_dt'].min()
-        end_ts = ref_ts
-        
-    # Filter forecast data
-    sub_forecast = df_forecast[(df_forecast['hour_dt'] >= start_ts) & (df_forecast['hour_dt'] <= ref_ts)]
-    
-    # Perform aggregation if window is larger than single hour
-    if window_opt != "Single Hour" and not sub_forecast.empty:
-        agg_forecast = sub_forecast.groupby('h3_cell').agg(
-            AOI=('AOI', 'mean'),
-            pred_t1=('pred_t1', 'mean'),
-            pred_t2=('pred_t2', 'mean'),
-            pred_t4=('pred_t4', 'mean'),
-            latitude=('latitude', 'mean'),
-            longitude=('longitude', 'mean'),
-            cell_vehicle_mass=('cell_vehicle_mass', 'mean'),
-            junction_flag=('junction_flag', 'max'),
-            violation_count=('violation_count', 'sum'),
-            historical_density=('historical_density', 'mean')
-        ).reset_index()
-        # Add timestamp to match schema
-        agg_forecast['hour_dt'] = ref_ts
-    else:
-        agg_forecast = sub_forecast.copy()
-        
-    st.session_state['filtered_forecast'] = agg_forecast
-    st.session_state['filtered_violations'] = None
+    # df_forecast and filtered_forecast are already loaded and synchronized via ensure_data_loaded()
+    pass
 else:
     st.sidebar.warning("Forecast database not generated yet. Use the training script first.")
     st.session_state['selected_time'] = datetime.now()

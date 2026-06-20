@@ -156,8 +156,9 @@ def render_simulator_page():
     # Inline controls row using selectboxes (safest, most robust date-time pattern)
     col_date, col_hour, col_slider = st.columns([1.2, 1.0, 2.2])
     
-    # Unique times in local IST
-    all_times_ist = pd.DatetimeIndex(df_forecast['hour_dt'].unique()).tz_convert("Asia/Kolkata")
+    # Unique times in local IST from metadata
+    df_forecast_hours = st.session_state.get("df_forecast_hours")
+    all_times_ist = pd.DatetimeIndex(df_forecast_hours['hour_dt'].unique()).tz_convert("Asia/Kolkata")
     unique_dates = sorted(list(set(all_times_ist.date)))
     date_labels = [str(d) for d in unique_dates]
     
@@ -187,14 +188,18 @@ def render_simulator_page():
     sel_ts_local = pd.Timestamp(f"{sel_date_str} {sel_hour:02d}:00:00", tz="Asia/Kolkata")
     sel_ts_utc = sel_ts_local.tz_convert("UTC")
     
-    # Align to the nearest hour in df_forecast to prevent empty dataset returns
-    all_utc_idx = pd.DatetimeIndex(df_forecast['hour_dt'].unique())
+    # Align to the nearest hour in df_forecast_hours to prevent empty dataset returns
+    all_utc_idx = pd.DatetimeIndex(df_forecast_hours['hour_dt'].unique())
     deltas = np.abs((all_utc_idx - sel_ts_utc).total_seconds())
     nearest_ts = all_utc_idx[int(np.argmin(deltas))]
     
-    # Sync back to session state silently
-    st.session_state['selected_time'] = nearest_ts
-
+    # Sync back to session state silently and update data if it changed
+    if nearest_ts != st.session_state.get('selected_time'):
+        st.session_state['selected_time'] = nearest_ts
+        from app.data_state import update_filtered_data
+        update_filtered_data()
+        df_forecast = st.session_state.get('df_forecast')
+        
     # Load optimizer data using aligned nearest timestamp
     df_hour, schedule_df, summary = optimize_patrol_allocations(
         df_forecast, nearest_ts, station_map, total_officers=total_officers
@@ -278,7 +283,7 @@ def render_simulator_page():
         <div class="kpi-card">
             <div class="kpi-title">AI Coverage Efficiency</div>
             <div class="kpi-value-container">
-                <div class="kpi-val-big" style="color: #4f8ef7;">{eff_ratio:.1f}×</div>
+                <div class="kpi-val-big" style="color: #4f8ef7;">{eff_ratio:.1f}&times;</div>
             </div>
             <div class="kpi-subtitle">more IEU points covered per unit</div>
         </div>
