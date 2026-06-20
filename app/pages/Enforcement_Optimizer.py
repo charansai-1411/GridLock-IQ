@@ -198,13 +198,12 @@ def render_optimizer_page():
     st.set_page_config(layout="wide", page_title="Enforcement Optimizer — GridLock IQ")
     ensure_data_loaded()
     
-    df_violations = st.session_state.get('df_violations')
     df_forecast = st.session_state.get('df_forecast')
     station_map = st.session_state.get('station_map')
     selected_time = st.session_state.get('selected_time')
     df_repeat_offenders = st.session_state.get('df_repeat_offenders')
     
-    if df_violations is None or df_forecast is None:
+    if df_forecast is None:
         st.error("Error: Datasets failed to load. Please verify your data files.")
         return
         

@@ -9,16 +9,26 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config import PROCESSED_DATA_PATH
 
-def get_h3_to_station_map(df):
+def get_h3_to_station_map(df=None):
     """
     Builds a data-driven mapping from H3 cell IDs to BTP police stations and center codes.
     Uses the joint mode (most frequent combination) of station and center code for each cell.
+    If df is None, attempts to load the pre-computed map from JSON to save time and memory.
     """
+    if df is None:
+        import json
+        from config import PROCESSED_DATA_DIR
+        json_path = os.path.join(PROCESSED_DATA_DIR, "station_map.json")
+        if os.path.exists(json_path):
+            with open(json_path, "r") as f:
+                return json.load(f)
+        return {}
+        
     print("Building H3-to-Station mapping from data...")
-    if df is None or df.empty:
+    if df.empty:
         return {}
     
-    # Calculate frequency of each combination in a vectorized way (much faster than .agg(lambda x: x.mode()))
+    # Calculate frequency of each combination in a vectorized way
     counts = df.groupby(['h3_cell', 'police_station', 'center_code']).size().reset_index(name='count')
     # Sort by H3 cell and frequency count descending
     counts = counts.sort_values(by=['h3_cell', 'count'], ascending=[True, False])

@@ -931,15 +931,14 @@ def render_prediction_engine():
     ensure_data_loaded()
     poi_tags = _load_poi_tags()
 
-    df_viol = st.session_state.get("df_violations")
     df_fc   = st.session_state.get("df_forecast")
 
-    if df_viol is None or df_fc is None:
+    if df_fc is None:
         st.error("Data not loaded. Please reload.")
         return
 
     if "station_map" not in st.session_state or not st.session_state["station_map"]:
-        st.session_state["station_map"] = get_h3_to_station_map(df_viol)
+        st.session_state["station_map"] = get_h3_to_station_map()
     station_map = st.session_state["station_map"]
 
     df_fc = df_fc.copy()

@@ -221,6 +221,12 @@ def build_weekday_bar_chart(df_all_violations, current_weekday):
 # ═══════════════════════════════════════════════════════════════════════════
 def render_overview():
     ensure_data_loaded()
+    
+    # Lazily load violations dataset and update filtered arrays on this page
+    from app.data_state import ensure_violations_loaded, update_filtered_data
+    ensure_violations_loaded()
+    update_filtered_data()
+
     poi_tags = load_poi_tags()
 
     df_violations = st.session_state.get("df_violations")

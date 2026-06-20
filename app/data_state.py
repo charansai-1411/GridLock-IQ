@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-
+import json
 import pandas as pd
 import streamlit as st
 
@@ -12,6 +12,7 @@ PROCESSED_DIR = os.path.dirname(PROCESSED_DATA_PATH)
 CLUSTERED_ZONES_PATH = os.path.join(PROCESSED_DIR, "h3_clustered_zones.parquet")
 FORECAST_RESULTS_PATH = os.path.join(PROCESSED_DIR, "forecast_results.parquet")
 REPEAT_OFFENDERS_PATH = os.path.join(PROCESSED_DIR, "repeat_offenders.parquet")
+STATION_MAP_PATH = os.path.join(PROCESSED_DIR, "station_map.json")
 
 
 def get_data_file_versions():
@@ -28,25 +29,18 @@ def get_data_file_versions():
 @st.cache_data
 def load_all_data(data_file_versions):
     _ = data_file_versions
-    df_violations = None
     df_clustered_zones = None
     df_forecast = None
     df_repeat_offenders = None
     station_map = {}
 
-    if os.path.exists(PROCESSED_DATA_PATH):
-        # Optimize memory usage by loading only columns accessed by the application
-        required_cols = [
-            "created_datetime",
-            "h3_cell",
-            "police_station",
-            "center_code",
-            "clean_vehicle_type",
-            "validation_status"
-        ]
-        df_violations = pd.read_parquet(PROCESSED_DATA_PATH, columns=required_cols)
-        df_violations["created_datetime"] = pd.to_datetime(df_violations["created_datetime"])
-        station_map = get_h3_to_station_map(df_violations)
+    # Load station map from static precompiled JSON to save startup computation and memory
+    if os.path.exists(STATION_MAP_PATH):
+        try:
+            with open(STATION_MAP_PATH, "r") as f:
+                station_map = json.load(f)
+        except Exception as e:
+            print(f"Error loading station_map.json: {e}")
 
     if os.path.exists(CLUSTERED_ZONES_PATH):
         df_clustered_zones = pd.read_parquet(CLUSTERED_ZONES_PATH)
@@ -58,11 +52,37 @@ def load_all_data(data_file_versions):
     if os.path.exists(REPEAT_OFFENDERS_PATH):
         df_repeat_offenders = pd.read_parquet(REPEAT_OFFENDERS_PATH)
 
-    return df_violations, df_clustered_zones, df_forecast, df_repeat_offenders, station_map
+    return df_clustered_zones, df_forecast, df_repeat_offenders, station_map
+
+
+@st.cache_data
+def load_violations_lazy():
+    """Lazily load violations DataFrame only when needed (e.g., on Command Overview page)."""
+    if os.path.exists(PROCESSED_DATA_PATH):
+        required_cols = [
+            "created_datetime",
+            "h3_cell",
+            "police_station",
+            "center_code",
+            "clean_vehicle_type",
+            "validation_status"
+        ]
+        df = pd.read_parquet(PROCESSED_DATA_PATH, columns=required_cols)
+        df["created_datetime"] = pd.to_datetime(df["created_datetime"])
+        return df
+    return None
+
+
+def ensure_violations_loaded():
+    """Ensure violations DataFrame is loaded in session state on demand."""
+    if st.session_state.get("df_violations") is None:
+        st.session_state["df_violations"] = load_violations_lazy()
+    return st.session_state["df_violations"]
 
 
 def clear_data_cache():
     load_all_data.clear()
+    load_violations_lazy.clear()
 
 
 def ensure_data_loaded():
@@ -73,7 +93,8 @@ def ensure_data_loaded():
     cached data is discarded and reloaded so stale results don't persist mid-session.
     """
     current_versions = get_data_file_versions()
-    if st.session_state.get("df_violations") is not None and st.session_state.get("df_forecast") is not None:
+    # Check forecast dataframe instead of violations since violations is lazy loaded now
+    if st.session_state.get("df_forecast") is not None:
         # Already loaded — check if files have changed since last load
         if st.session_state.get("_data_versions") == current_versions:
             return  # Files unchanged; session state is current
@@ -84,12 +105,13 @@ def ensure_data_loaded():
                     "selected_time", "time_window", "_data_versions"):
             st.session_state.pop(key, None)
         load_all_data.clear()
+        load_violations_lazy.clear()
 
-    df_violations, df_clustered_zones, df_forecast, df_repeat_offenders, station_map = load_all_data(
+    df_clustered_zones, df_forecast, df_repeat_offenders, station_map = load_all_data(
         get_data_file_versions()
     )
 
-    st.session_state["df_violations"] = df_violations
+    st.session_state["df_violations"] = None  # Lazy loaded
     st.session_state["df_clustered_zones"] = df_clustered_zones
     st.session_state["df_forecast"] = df_forecast
     st.session_state["df_repeat_offenders"] = df_repeat_offenders
@@ -104,8 +126,6 @@ def ensure_data_loaded():
 
     if "selected_time" not in st.session_state:
         # Default to the single hour with the highest total city-wide violation count.
-        # This is the busiest hour across the entire dataset — guaranteed to show a
-        # fully populated view on first load rather than landing on a sparse window.
         hourly_totals = df_forecast.groupby("hour_dt")["violation_count"].sum()
         if not hourly_totals.empty:
             st.session_state["selected_time"] = hourly_totals.idxmax()
@@ -174,7 +194,7 @@ def update_filtered_data():
     if window_opt != "Single Hour" and not sub_forecast.empty:
         agg_forecast = sub_forecast.groupby("h3_cell").agg(
             AOI=("AOI", "mean"),
-            AOI_max=("AOI", "max"),       # peak-hour value for critical-count detection
+            AOI_max=("AOI", "max"),
             pred_t1=("pred_t1", "mean"),
             pred_t2=("pred_t2", "mean"),
             pred_t4=("pred_t4", "mean"),
@@ -188,7 +208,6 @@ def update_filtered_data():
         agg_forecast["hour_dt"] = ref_ts
     else:
         agg_forecast = sub_forecast.copy()
-        # Single Hour: snapshot AOI == peak AOI; add column so downstream code is consistent
         agg_forecast["AOI_max"] = agg_forecast["AOI"]
 
     st.session_state["filtered_forecast"] = agg_forecast
