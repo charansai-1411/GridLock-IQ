@@ -35,7 +35,16 @@ def load_all_data(data_file_versions):
     station_map = {}
 
     if os.path.exists(PROCESSED_DATA_PATH):
-        df_violations = pd.read_parquet(PROCESSED_DATA_PATH)
+        # Optimize memory usage by loading only columns accessed by the application
+        required_cols = [
+            "created_datetime",
+            "h3_cell",
+            "police_station",
+            "center_code",
+            "clean_vehicle_type",
+            "validation_status"
+        ]
+        df_violations = pd.read_parquet(PROCESSED_DATA_PATH, columns=required_cols)
         df_violations["created_datetime"] = pd.to_datetime(df_violations["created_datetime"])
         station_map = get_h3_to_station_map(df_violations)
 
