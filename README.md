@@ -216,7 +216,7 @@ gridlock-iq/
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/GridLock-IQ.git
+git clone https://github.com/charansai-1411/GridLock-IQ.git
 cd GridLock-IQ
 
 # Create virtual environment
