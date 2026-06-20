@@ -18,59 +18,12 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. Cache Data Loading for uvicorn/streamlit speed
-PROCESSED_DIR = os.path.dirname(PROCESSED_DATA_PATH)
-CLUSTERED_ZONES_PATH = os.path.join(PROCESSED_DIR, "h3_clustered_zones.parquet")
-FORECAST_RESULTS_PATH = os.path.join(PROCESSED_DIR, "forecast_results.parquet")
-REPEAT_OFFENDERS_PATH = os.path.join(PROCESSED_DIR, "repeat_offenders.parquet")
+# 2. Import and run data state loader
+from app.data_state import ensure_data_loaded
 
-def get_data_file_versions():
-    """Build a cache key from data file modification times."""
-    paths = (
-        PROCESSED_DATA_PATH,
-        CLUSTERED_ZONES_PATH,
-        FORECAST_RESULTS_PATH,
-        REPEAT_OFFENDERS_PATH,
-    )
-    return tuple((path, os.path.getmtime(path) if os.path.exists(path) else None) for path in paths)
-
-@st.cache_data
-def load_all_data(data_file_versions):
-    _ = data_file_versions
-    df_violations = None
-    df_clustered_zones = None
-    df_forecast = None
-    df_repeat_offenders = None
-    station_map = {}
-    
-    if os.path.exists(PROCESSED_DATA_PATH):
-        df_violations = pd.read_parquet(PROCESSED_DATA_PATH)
-        # Parse timestamp column
-        df_violations['created_datetime'] = pd.to_datetime(df_violations['created_datetime'])
-        station_map = get_h3_to_station_map(df_violations)
-        
-    if os.path.exists(CLUSTERED_ZONES_PATH):
-        df_clustered_zones = pd.read_parquet(CLUSTERED_ZONES_PATH)
-        
-    if os.path.exists(FORECAST_RESULTS_PATH):
-        df_forecast = pd.read_parquet(FORECAST_RESULTS_PATH)
-        df_forecast['hour_dt'] = pd.to_datetime(df_forecast['hour_dt'])
-        
-    if os.path.exists(REPEAT_OFFENDERS_PATH):
-        df_repeat_offenders = pd.read_parquet(REPEAT_OFFENDERS_PATH)
-        
-    return df_violations, df_clustered_zones, df_forecast, df_repeat_offenders, station_map
-
-# Load datasets into memory
+# Load datasets into memory using shared data state module
 with st.spinner("Initializing GridLock IQ Intelligence Engine..."):
-    df_violations, df_clustered_zones, df_forecast, df_repeat_offenders, station_map = load_all_data(get_data_file_versions())
-
-# Store in session state for page components
-st.session_state['df_violations'] = df_violations
-st.session_state['df_clustered_zones'] = df_clustered_zones
-st.session_state['df_forecast'] = df_forecast
-st.session_state['df_repeat_offenders'] = df_repeat_offenders
-st.session_state['station_map'] = station_map
+    ensure_data_loaded()
 
 # Multipage Navigation Setup using modern Streamlit Pages API
 # Ensure pages folder exists and has corresponding files

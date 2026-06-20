@@ -12,15 +12,20 @@ from config import PROCESSED_DATA_PATH
 def get_h3_to_station_map(df):
     """
     Builds a data-driven mapping from H3 cell IDs to BTP police stations and center codes.
-    Uses the mode (most frequent) station associated with each cell.
+    Uses the joint mode (most frequent combination) of station and center code for each cell.
     """
     print("Building H3-to-Station mapping from data...")
-    # Group by cell and get mode of police_station and center_code
-    cell_station = df.groupby('h3_cell').agg(
-        police_station=('police_station', lambda x: x.mode()[0] if not x.mode().empty else 'UNKNOWN'),
-        center_code=('center_code', lambda x: x.mode()[0] if not x.mode().empty else -1.0)
-    ).reset_index()
-    return cell_station.set_index('h3_cell').to_dict('index')
+    if df is None or df.empty:
+        return {}
+    
+    # Calculate frequency of each combination in a vectorized way (much faster than .agg(lambda x: x.mode()))
+    counts = df.groupby(['h3_cell', 'police_station', 'center_code']).size().reset_index(name='count')
+    # Sort by H3 cell and frequency count descending
+    counts = counts.sort_values(by=['h3_cell', 'count'], ascending=[True, False])
+    # Drop duplicates to keep only the single most frequent pair for each H3 cell
+    cell_station = counts.drop_duplicates(subset=['h3_cell'])
+    
+    return cell_station.set_index('h3_cell')[['police_station', 'center_code']].to_dict('index')
 
 def get_dispatch_alerts(pred_df, current_time, station_map, cell_vehicle_map=None):
     """
