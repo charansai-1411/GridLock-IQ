@@ -278,6 +278,8 @@ st.sidebar.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+df_forecast = st.session_state.get("df_forecast")
+
 if df_forecast is not None:
     # Identify unique date-hours in the forecast parquet
     unique_datetimes = sorted(df_forecast['hour_dt'].unique())
@@ -393,23 +395,6 @@ if df_forecast is not None:
     # Filter forecast data
     sub_forecast = df_forecast[(df_forecast['hour_dt'] >= start_ts) & (df_forecast['hour_dt'] <= ref_ts)]
     
-    # Handle timezone for raw violations
-    tz = df_violations['created_datetime'].dt.tz if df_violations is not None else None
-    if tz is not None and start_ts.tzinfo is None:
-        start_ts_viols = start_ts.tz_localize(tz)
-        end_ts_viols = end_ts.tz_localize(tz)
-    elif tz is None and start_ts.tzinfo is not None:
-        start_ts_viols = start_ts.tz_localize(None)
-        end_ts_viols = end_ts.tz_localize(None)
-    else:
-        start_ts_viols = start_ts
-        end_ts_viols = end_ts
-        
-    if df_violations is not None:
-        sub_violations = df_violations[(df_violations['created_datetime'] >= start_ts_viols) & (df_violations['created_datetime'] <= end_ts_viols)]
-    else:
-        sub_violations = None
-        
     # Perform aggregation if window is larger than single hour
     if window_opt != "Single Hour" and not sub_forecast.empty:
         agg_forecast = sub_forecast.groupby('h3_cell').agg(
@@ -430,7 +415,7 @@ if df_forecast is not None:
         agg_forecast = sub_forecast.copy()
         
     st.session_state['filtered_forecast'] = agg_forecast
-    st.session_state['filtered_violations'] = sub_violations
+    st.session_state['filtered_violations'] = None
 else:
     st.sidebar.warning("Forecast database not generated yet. Use the training script first.")
     st.session_state['selected_time'] = datetime.now()

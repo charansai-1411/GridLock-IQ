@@ -932,6 +932,7 @@ def render_prediction_engine():
     poi_tags = _load_poi_tags()
 
     df_fc   = st.session_state.get("df_forecast")
+    df_viol = None
 
     if df_fc is None:
         st.error("Data not loaded. Please reload.")

@@ -5,8 +5,6 @@ import pandas as pd
 import streamlit as st
 
 from config import PROCESSED_DATA_PATH
-from src.patrol_optimizer import get_h3_to_station_map
-
 
 PROCESSED_DIR = os.path.dirname(PROCESSED_DATA_PATH)
 CLUSTERED_ZONES_PATH = os.path.join(PROCESSED_DIR, "h3_clustered_zones.parquet")
@@ -18,7 +16,6 @@ STATION_MAP_PATH = os.path.join(PROCESSED_DIR, "station_map.json")
 def get_data_file_versions():
     """Build a cache key from data file modification times."""
     paths = (
-        PROCESSED_DATA_PATH,
         CLUSTERED_ZONES_PATH,
         FORECAST_RESULTS_PATH,
         REPEAT_OFFENDERS_PATH,
@@ -55,34 +52,8 @@ def load_all_data(data_file_versions):
     return df_clustered_zones, df_forecast, df_repeat_offenders, station_map
 
 
-@st.cache_data
-def load_violations_lazy():
-    """Lazily load violations DataFrame only when needed (e.g., on Command Overview page)."""
-    if os.path.exists(PROCESSED_DATA_PATH):
-        required_cols = [
-            "created_datetime",
-            "h3_cell",
-            "police_station",
-            "center_code",
-            "clean_vehicle_type",
-            "validation_status"
-        ]
-        df = pd.read_parquet(PROCESSED_DATA_PATH, columns=required_cols)
-        df["created_datetime"] = pd.to_datetime(df["created_datetime"])
-        return df
-    return None
-
-
-def ensure_violations_loaded():
-    """Ensure violations DataFrame is loaded in session state on demand."""
-    if st.session_state.get("df_violations") is None:
-        st.session_state["df_violations"] = load_violations_lazy()
-    return st.session_state["df_violations"]
-
-
 def clear_data_cache():
     load_all_data.clear()
-    load_violations_lazy.clear()
 
 
 def ensure_data_loaded():
@@ -93,25 +64,22 @@ def ensure_data_loaded():
     cached data is discarded and reloaded so stale results don't persist mid-session.
     """
     current_versions = get_data_file_versions()
-    # Check forecast dataframe instead of violations since violations is lazy loaded now
     if st.session_state.get("df_forecast") is not None:
         # Already loaded — check if files have changed since last load
         if st.session_state.get("_data_versions") == current_versions:
             return  # Files unchanged; session state is current
         # Files changed: clear stale state and reload
-        for key in ("df_violations", "df_clustered_zones", "df_forecast",
+        for key in ("df_clustered_zones", "df_forecast",
                     "df_repeat_offenders", "station_map",
                     "filtered_forecast", "filtered_violations",
                     "selected_time", "time_window", "_data_versions"):
             st.session_state.pop(key, None)
         load_all_data.clear()
-        load_violations_lazy.clear()
 
     df_clustered_zones, df_forecast, df_repeat_offenders, station_map = load_all_data(
         get_data_file_versions()
     )
 
-    st.session_state["df_violations"] = None  # Lazy loaded
     st.session_state["df_clustered_zones"] = df_clustered_zones
     st.session_state["df_forecast"] = df_forecast
     st.session_state["df_repeat_offenders"] = df_repeat_offenders
@@ -139,7 +107,6 @@ def ensure_data_loaded():
 
 
 def update_filtered_data():
-    df_violations = st.session_state.get("df_violations")
     df_forecast = st.session_state.get("df_forecast")
     selected_time = st.session_state.get("selected_time")
 
@@ -173,24 +140,6 @@ def update_filtered_data():
 
     sub_forecast = df_forecast[(df_forecast["hour_dt"] >= start_ts) & (df_forecast["hour_dt"] <= end_ts)]
 
-    if df_violations is not None:
-        tz = df_violations["created_datetime"].dt.tz
-        if tz is not None and start_ts.tzinfo is None:
-            start_ts_viols = start_ts.tz_localize(tz)
-            end_ts_viols = end_ts.tz_localize(tz)
-        elif tz is None and start_ts.tzinfo is not None:
-            start_ts_viols = start_ts.tz_localize(None)
-            end_ts_viols = end_ts.tz_localize(None)
-        else:
-            start_ts_viols = start_ts
-            end_ts_viols = end_ts
-        sub_violations = df_violations[
-            (df_violations["created_datetime"] >= start_ts_viols)
-            & (df_violations["created_datetime"] <= end_ts_viols)
-        ]
-    else:
-        sub_violations = None
-
     if window_opt != "Single Hour" and not sub_forecast.empty:
         agg_forecast = sub_forecast.groupby("h3_cell").agg(
             AOI=("AOI", "mean"),
@@ -211,4 +160,4 @@ def update_filtered_data():
         agg_forecast["AOI_max"] = agg_forecast["AOI"]
 
     st.session_state["filtered_forecast"] = agg_forecast
-    st.session_state["filtered_violations"] = sub_violations
+    st.session_state["filtered_violations"] = None

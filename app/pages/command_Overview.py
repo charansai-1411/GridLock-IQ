@@ -181,16 +181,20 @@ def build_risk_distribution_bar(hour_forecasts):
 # ═══════════════════════════════════════════════════════════════════════════
 #  DAY-OF-WEEK BAR CHART — vertical, all historical data (bug fix)
 # ═══════════════════════════════════════════════════════════════════════════
-def build_weekday_bar_chart(df_all_violations, current_weekday):
-    """Vertical bar chart of avg violations/hour per day. Uses ALL data, not filtered."""
+def build_weekday_bar_chart(current_weekday):
+    """Vertical bar chart of avg violations/hour per day using precomputed stats."""
     day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    df_v = df_all_violations.copy()
-    df_v["weekday"] = df_v["created_datetime"].dt.weekday
-    df_v["hour"] = df_v["created_datetime"].dt.hour
-
-    # Count by weekday × hour, then average over hours → avg violations per hour per day
-    hourly = df_v.groupby(["weekday", "hour"]).size().reset_index(name="count")
-    avg_per_day = hourly.groupby("weekday")["count"].mean().reindex(range(7), fill_value=0)
+    
+    # Load precomputed weekday averages
+    stats_path = os.path.join(PROJECT_ROOT, "data", "processed", "overview_stats.json")
+    if os.path.exists(stats_path):
+        with open(stats_path, "r") as f:
+            stats = json.load(f)
+        avg_values = stats.get("weekday_avg", [0]*7)
+    else:
+        avg_values = [0]*7
+        
+    avg_per_day = pd.Series(avg_values, index=range(7))
 
     colors = [HIGH if i == current_weekday else ACCENT for i in range(7)]
 
@@ -221,20 +225,13 @@ def build_weekday_bar_chart(df_all_violations, current_weekday):
 # ═══════════════════════════════════════════════════════════════════════════
 def render_overview():
     ensure_data_loaded()
-    
-    # Lazily load violations dataset and update filtered arrays on this page
-    from app.data_state import ensure_violations_loaded, update_filtered_data
-    ensure_violations_loaded()
-    update_filtered_data()
-
     poi_tags = load_poi_tags()
 
-    df_violations = st.session_state.get("df_violations")
     df_forecast   = st.session_state.get("df_forecast")
     station_map   = st.session_state.get("station_map", {})
     selected_time = st.session_state.get("selected_time")
 
-    if df_violations is None or df_forecast is None:
+    if df_forecast is None:
         st.error("Datasets failed to load.")
         return
 
@@ -257,9 +254,7 @@ def render_overview():
     if hour_forecasts is None or hour_forecasts.empty:
         hour_forecasts = df_forecast
 
-    day_viols = st.session_state.get("filtered_violations", df_violations)
-    if day_viols is None or day_viols.empty:
-        day_viols = df_violations
+
 
     # ── Compute KPI metrics ──
     aoi_col  = "AOI_max" if "AOI_max" in hour_forecasts.columns else "AOI"
@@ -298,24 +293,25 @@ def render_overview():
     peak_time  = (target_ts + pd.Timedelta(hours=peak_h)).strftime("%I:%M %p")
     peak_label = f"{peak_time}  (+{peak_h}h)"
 
-    # Active violations this hour (from violations table)
+    # Active violations this hour (from df_forecast instead of df_violations)
     try:
-        tz = df_violations["created_datetime"].dt.tz
-        hour_start = target_ts if tz is None else target_ts.tz_convert(tz) if target_ts.tzinfo else target_ts.tz_localize(tz)
-        hour_end   = hour_start + pd.Timedelta(hours=1)
-        active_viols_count = len(df_violations[
-            (df_violations["created_datetime"] >= hour_start) &
-            (df_violations["created_datetime"] <  hour_end)
-        ])
+        utc_hour = target_ts.tz_convert("UTC")
+        active_viols_count = int(df_forecast[df_forecast["hour_dt"] == utc_hour]["violation_count"].sum())
     except Exception:
         active_viols_count = int(hour_forecasts["violation_count"].sum()) if "violation_count" in hour_forecasts.columns else 0
 
     # Officers recommended (3 per critical zone + 1 per high zone)
     officers_rec = max(critical_count * 3 + len(high_df), 1)
 
-    # Ticket validation rate (honest name for what was "Enforcement ROI")
-    app_n  = len(df_violations[df_violations["validation_status"] == "approved"])
-    rej_n  = len(df_violations[df_violations["validation_status"] == "rejected"])
+    # Ticket validation rate (using precomputed approvals/rejections from overview_stats.json)
+    stats_path = os.path.join(PROJECT_ROOT, "data", "processed", "overview_stats.json")
+    if os.path.exists(stats_path):
+        with open(stats_path, "r") as f:
+            stats = json.load(f)
+        app_n = stats.get("approved_count", 0)
+        rej_n = stats.get("rejected_count", 0)
+    else:
+        app_n, rej_n = 0, 0
     val_rt = app_n / max(app_n + rej_n, 1) * 100
 
     # ── Load data timestamp ──
@@ -482,43 +478,29 @@ def render_overview():
     col_trend, col_alerts = st.columns([1.5, 1.0])
 
     with col_trend:
-        # Build hourly data for the selected date
-        tz = df_violations["created_datetime"].dt.tz
-        try:
-            day_start = pd.Timestamp(selected_date).tz_localize(tz) if tz else pd.Timestamp(selected_date)
-            day_end   = day_start + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
-            full_day  = df_violations[
-                (df_violations["created_datetime"] >= day_start) &
-                (df_violations["created_datetime"] <= day_end)
-            ].copy()
-        except Exception:
-            full_day = day_viols.copy()
-
-        if not full_day.empty and full_day["created_datetime"].dt.tz is not None:
-            full_day["local_hour"] = full_day["created_datetime"].dt.tz_convert("Asia/Kolkata").dt.hour
-        elif not full_day.empty:
-            full_day["local_hour"] = full_day["created_datetime"].dt.hour
-        else:
-            full_day["local_hour"] = pd.Series(dtype=int)
+        # Build hourly data for the selected date from df_forecast (no violations needed)
+        df_day = df_forecast.copy()
+        df_day["local_dt"] = df_day["hour_dt"].dt.tz_convert("Asia/Kolkata")
+        df_day_selected = df_day[df_day["local_dt"].dt.date == pd.to_datetime(selected_date).date()]
 
         all_hrs = pd.DataFrame({"hour": range(24)})
-        day_hourly = (full_day.groupby("local_hour").size()
-                      .reset_index(name="violation_count")
-                      .rename(columns={"local_hour": "hour"}))
-        day_hourly = pd.merge(all_hrs, day_hourly, on="hour", how="left").fillna(0).astype(int)
+        if not df_day_selected.empty:
+            day_hourly = df_day_selected.groupby(df_day_selected["local_dt"].dt.hour)["violation_count"].sum().reset_index()
+            day_hourly.columns = ["hour", "violation_count"]
+            day_hourly = pd.merge(all_hrs, day_hourly, on="hour", how="left").fillna(0)
+            day_hourly["violation_count"] = day_hourly["violation_count"].astype(int)
+        else:
+            day_hourly = pd.DataFrame({"hour": range(24), "violation_count": [0]*24})
 
-        # Historic baseline — same weekday average across ALL data (no filter)
-        hist_same_dow = df_violations[df_violations["created_datetime"].dt.weekday == current_weekday].copy()
-        if not hist_same_dow.empty and hist_same_dow["created_datetime"].dt.tz is not None:
-            hist_same_dow["local_hour"] = hist_same_dow["created_datetime"].dt.tz_convert("Asia/Kolkata").dt.hour
-        elif not hist_same_dow.empty:
-            hist_same_dow["local_hour"] = hist_same_dow["created_datetime"].dt.hour
-        n_weeks = max(hist_same_dow["created_datetime"].dt.isocalendar().week.nunique(), 1) if not hist_same_dow.empty else 1
-        hist_hrly = (hist_same_dow.groupby("local_hour").size()
-                     .reset_index(name="total")
-                     .rename(columns={"local_hour": "hour"}))
-        hist_hrly = pd.merge(all_hrs, hist_hrly, on="hour", how="left").fillna(0)
-        hist_hrly["violation_count"] = (hist_hrly["total"] / n_weeks).round(0).astype(int)
+        # Historic baseline — load precomputed average for same weekday from overview_stats.json
+        stats_path = os.path.join(PROJECT_ROOT, "data", "processed", "overview_stats.json")
+        if os.path.exists(stats_path):
+            with open(stats_path, "r") as f:
+                stats = json.load(f)
+            hist_list = stats.get("hourly_hist_avg", {}).get(str(current_weekday), [0]*24)
+        else:
+            hist_list = [0]*24
+        hist_hrly = pd.DataFrame({"hour": range(24), "violation_count": hist_list})
 
         st.plotly_chart(
             build_hero_trend_chart(day_hourly, hist_hrly, current_hour),
@@ -527,11 +509,14 @@ def render_overview():
 
     with col_alerts:
         # Build alerts using poi_tags for human-readable zone names
-        cell_vehicle_map = (
-            df_violations.groupby("h3_cell")["clean_vehicle_type"]
-            .agg(lambda x: x.mode()[0] if not x.mode().empty else "CAR")
-            .to_dict()
-        )
+        # Load dominant vehicle map from precomputed JSON
+        stats_path = os.path.join(PROJECT_ROOT, "data", "processed", "overview_stats.json")
+        if os.path.exists(stats_path):
+            with open(stats_path, "r") as f:
+                stats = json.load(f)
+            cell_vehicle_map = stats.get("cell_vehicle_map", {})
+        else:
+            cell_vehicle_map = {}
         alerts = get_dispatch_alerts(df_forecast, target_ts, station_map, cell_vehicle_map)
         n_alerts = len(alerts)
 
@@ -711,9 +696,8 @@ def render_overview():
             <span style="color:{HIGH};">■</span> Today ({'Mon Tue Wed Thu Fri Sat Sun'.split()[current_weekday]})
         </div>"""), unsafe_allow_html=True)
 
-        # FIXED: use df_violations (all data), not day_viols (filtered single day)
         st.plotly_chart(
-            build_weekday_bar_chart(df_violations, current_weekday),
+            build_weekday_bar_chart(current_weekday),
             use_container_width=True
         )
 

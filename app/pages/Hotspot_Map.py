@@ -654,7 +654,7 @@ def render_hotspot_map():
         fc_window = df_fc
 
     # ── Build + render ────────────────────────────────────────────────────
-    geojson_str = build_geojson(fc_window, df_fc, df_viol, station_map, poi_tags)
+    geojson_str = build_geojson(fc_window, df_fc, None, station_map, poi_tags)
     html_content = _build_html(geojson_str, tw)
     st.components.v1.html(html_content, height=700, scrolling=False)
 
