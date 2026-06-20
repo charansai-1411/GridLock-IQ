@@ -231,6 +231,48 @@ def render_optimizer_page():
             border-color: rgba(255,255,255,0.4) !important;
             color: #ffffff !important;
         }
+        
+        .kpi-row {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            font-family: 'Inter', sans-serif;
+            width: 100%;
+        }
+        
+        .kpi-card {
+            background-color: #11141c;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 6px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 6px;
+            flex: 1 1 auto;
+        }
+        
+        .kpi-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #94a3b8;
+            margin: 0;
+        }
+        
+        .kpi-value {
+            font-size: 1.15rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            margin: 0 2px;
+        }
+        
+        .kpi-subtitle {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin: 0;
+        }
         </style>
         """,
         unsafe_allow_html=True
@@ -375,33 +417,33 @@ def render_optimizer_page():
     kpi_html = f"""
     <div class="kpi-row">
         <div class="kpi-card">
-            <div class="kpi-title">Units Required</div>
-            <div class="kpi-value" style="color: #4fc3f7;">{total_units}</div>
-            <div class="kpi-subtitle">for this hour</div>
+            <span class="kpi-title">Units Required:</span>
+            <span class="kpi-value" style="color: #4fc3f7;">{total_units}</span>
+            <span class="kpi-subtitle">for this hour</span>
         </div>
         <div class="kpi-card">
-            <div class="kpi-title">Critical Zones</div>
-            <div class="kpi-value" style="color: #ff4444;">{critical_count}</div>
-            <div class="kpi-subtitle">immediate deploy</div>
+            <span class="kpi-title">Critical Zones:</span>
+            <span class="kpi-value" style="color: #ff4444;">{critical_count}</span>
+            <span class="kpi-subtitle">immediate deploy</span>
         </div>
         <div class="kpi-card">
-            <div class="kpi-title">Jurisdictions Affected</div>
-            <div class="kpi-value" style="color: #ffffff;">{jurisdictions_count}</div>
-            <div class="kpi-subtitle">need coverage</div>
+            <span class="kpi-title">Jurisdictions Affected:</span>
+            <span class="kpi-value" style="color: #ffffff;">{jurisdictions_count}</span>
+            <span class="kpi-subtitle">need coverage</span>
         </div>
         <div class="kpi-card">
-            <div class="kpi-title">Repeat Offenders</div>
-            <div class="kpi-value" style="color: #ff8c00;">{repeat_offenders_count}</div>
-            <div class="kpi-subtitle">flagged vehicles active today</div>
+            <span class="kpi-title">Repeat Offenders:</span>
+            <span class="kpi-value" style="color: #ff8c00;">{repeat_offenders_count}</span>
+            <span class="kpi-subtitle">flagged vehicles active today</span>
         </div>
         <div class="kpi-card">
-            <div class="kpi-title">Est. Coverage</div>
-            <div class="kpi-value" style="color: {coverage_color};">{coverage_pct}%</div>
-            <div class="kpi-subtitle">of critical zones</div>
+            <span class="kpi-title">Est. Coverage:</span>
+            <span class="kpi-value" style="color: {coverage_color};">{coverage_pct}%</span>
+            <span class="kpi-subtitle">of critical zones</span>
         </div>
     </div>
     """
-    st.html(kpi_html)
+    st.markdown(kpi_html, unsafe_allow_html=True)
     
     # ─── Component 3: Dispatch Orders Table ─────────────────────────────────
     table_html = f"""
