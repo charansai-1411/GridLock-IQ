@@ -509,4 +509,4 @@ Built for Flipkart GridLock 2.0 hackathon. Dataset used under HackerEarth compet
 
 ---
 
-*Built by Y. Charan Sai — B.E. Artificial Intelligence & Data Science, CBIT Hyderabad*
+*Built by Y. Charan Sai [Team Leader], B. Ram Charan, C. Ganesh Kumar, B. Praneeth Kumar*
