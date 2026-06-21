@@ -360,12 +360,14 @@ def render_overview():
         """, unsafe_allow_html=True)
     with col_picker:
         with st.popover("📅 Change Hour", use_container_width=True):
-            all_times_ist = pd.DatetimeIndex(df_forecast['hour_dt'].unique()).tz_convert("Asia/Kolkata")
+            # Use df_forecast_hours (all available hours) NOT df_forecast (single-day slice)
+            df_forecast_hours = st.session_state.get("df_forecast_hours")
+            all_times_ist = pd.DatetimeIndex(df_forecast_hours['hour_dt'].unique()).tz_convert("Asia/Kolkata")
             unique_dates = sorted(list(set(all_times_ist.date)))
-            
+
             target_ts_ist = target_ts.tz_convert("Asia/Kolkata") if target_ts.tzinfo else target_ts
             sel_date = st.date_input("Select Date", value=target_ts_ist.date(), min_value=min(unique_dates), max_value=max(unique_dates), key="ov_date_picker")
-            
+
             available_hours = sorted(list(set([t.hour for t in all_times_ist if t.date() == sel_date])))
             if not available_hours:
                 available_hours = list(range(24))
