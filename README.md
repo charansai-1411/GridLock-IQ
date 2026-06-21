@@ -12,6 +12,7 @@
 2. [What GridLock IQ Does](#what-gridlock-iq-does)
 3. [Key Results](#key-results)
 4. [System Architecture](#system-architecture)
+   - [Performance & Memory Architecture (DuckDB)](#performance--memory-architecture)
 5. [Tech Stack](#tech-stack)
 6. [Project Structure](#project-structure)
 7. [Dataset](#dataset)
@@ -111,6 +112,29 @@ Raw Violation Data (CSV)
 └───────────────────┘
 ```
 
+### Performance & Memory Architecture
+
+The 12 MB `forecast_results.parquet` file contains pre-computed predictions for all 178 H3 cells across the full date range. Loading the entire file into memory on every dashboard interaction would cause **Out of Memory (OOM) crashes** on low-RAM deployment environments (e.g., Render free tier).
+
+**Solution: DuckDB on-demand parquet querying**
+
+```python
+import duckdb
+con = duckdb.connect()
+# Query only the rows needed for the selected hour — no full file load
+df_hour = con.execute(
+    "SELECT * FROM read_parquet(?) WHERE hour_dt = ?",
+    [PARQUET_PATH, target_ts]
+).df()
+```
+
+DuckDB reads directly from the parquet file using predicate pushdown — only the rows matching the selected hour window are loaded into RAM. This reduces per-request memory from ~120 MB (full load) to ~2–5 MB (single-hour slice).
+
+| Component | Uses DuckDB |
+|---|---|
+| `app/data_state.py` | Loads unique forecast hours metadata; filters data by selected time window |
+| `app/pages/Hotspot_Map.py` | Queries the forecast window for the selected hour on map render |
+
 ---
 
 ## Tech Stack
@@ -125,6 +149,7 @@ Raw Violation Data (CSV)
 | **Maps** | Leaflet.js + Carto Dark tiles (free, no API key) |
 | **Charting** | Plotly Graph Objects |
 | **Data Storage** | Parquet (Apache Arrow / PyArrow) |
+| **Query Engine** | DuckDB — on-demand parquet slicing (RAM optimization) |
 
 > **Zero external data constraint strictly upheld.** All features are derived exclusively from the provided violation dataset. No external APIs, map data feeds, or third-party datasets are used.
 
