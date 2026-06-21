@@ -663,8 +663,11 @@ def render_hotspot_map():
         start_ts = ref_ts - pd.Timedelta(days=7)
         end_ts = ref_ts
 
-    start_str = start_ts.strftime("%Y-%m-%d %H:%M:%S")
-    end_str = end_ts.strftime("%Y-%m-%d %H:%M:%S")
+    # Convert to ISO string format for SQL query (always query in UTC as stored in database)
+    start_ts_utc = start_ts.tz_convert("UTC") if start_ts.tzinfo else start_ts
+    end_ts_utc = end_ts.tz_convert("UTC") if end_ts.tzinfo else end_ts
+    start_str = start_ts_utc.strftime("%Y-%m-%d %H:%M:%S")
+    end_str = end_ts_utc.strftime("%Y-%m-%d %H:%M:%S")
 
     # Dynamic query to parquet via DuckDB
     import duckdb

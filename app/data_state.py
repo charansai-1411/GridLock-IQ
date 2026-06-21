@@ -168,9 +168,11 @@ def update_filtered_data():
         start_ts = pd.to_datetime(df_forecast_hours["hour_dt"].min())
         end_ts = ref_ts
 
-    # Convert to ISO string format for SQL query
-    start_str = start_ts.strftime("%Y-%m-%d %H:%M:%S")
-    end_str = end_ts.strftime("%Y-%m-%d %H:%M:%S")
+    # Convert to ISO string format for SQL query (always query in UTC as stored in database)
+    start_ts_utc = start_ts.tz_convert("UTC") if start_ts.tzinfo else start_ts
+    end_ts_utc = end_ts.tz_convert("UTC") if end_ts.tzinfo else end_ts
+    start_str = start_ts_utc.strftime("%Y-%m-%d %H:%M:%S")
+    end_str = end_ts_utc.strftime("%Y-%m-%d %H:%M:%S")
 
     import duckdb
     con = duckdb.connect()

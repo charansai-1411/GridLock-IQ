@@ -381,7 +381,12 @@ def render_overview():
             sel_hour = st.selectbox("Select Hour", options=available_hours, format_func=lambda h: f"{h:02d}:00", index=available_hours.index(rounded_hour) if rounded_hour in available_hours else 0, key="ov_hour_picker")
             
             if st.button("Apply Changes", use_container_width=True, key="ov_apply_btn"):
-                new_ts_local = pd.Timestamp(f"{sel_date} {sel_hour:02d}:00:00", tz="Asia/Kolkata")
+                # Match user selected date and hour to the exact database timestamp in all_times_ist
+                matching_ts = [t for t in all_times_ist if t.date() == sel_date and t.hour == sel_hour]
+                if matching_ts:
+                    new_ts_local = matching_ts[0]
+                else:
+                    new_ts_local = pd.Timestamp(f"{sel_date} {sel_hour:02d}:30:00", tz="Asia/Kolkata")
                 st.session_state['selected_time'] = new_ts_local.tz_convert("UTC")
                 st.rerun()
 
