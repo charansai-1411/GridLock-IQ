@@ -287,16 +287,21 @@ def render_overview():
     delta_symbol = f"▲{crit_delta}" if crit_delta > 0 else (f"▼{abs(crit_delta)}" if crit_delta < 0 else "→ flat")
     delta_color  = CRITICAL if crit_delta > 0 else (LOW if crit_delta < 0 else TEXT_SEC)
 
-    # Predicted peak window
+    # Predicted peak window — display in IST
+    target_ts_ist = target_ts.tz_convert("Asia/Kolkata") if target_ts.tzinfo else target_ts
     peak_sums  = {1: hour_forecasts["pred_t1"].sum(), 2: hour_forecasts["pred_t2"].sum(), 4: hour_forecasts["pred_t4"].sum()}
     peak_h     = max(peak_sums, key=peak_sums.get)
-    peak_time  = (target_ts + pd.Timedelta(hours=peak_h)).strftime("%I:%M %p")
+    peak_time  = (target_ts_ist + pd.Timedelta(hours=peak_h)).strftime("%I:%M %p")
     peak_label = f"{peak_time}  (+{peak_h}h)"
 
-    # Active violations this hour (from df_forecast instead of df_violations)
+    # Active violations this hour — compare in parquet's timezone
     try:
-        utc_hour = target_ts.tz_convert("UTC")
-        active_viols_count = int(df_forecast[df_forecast["hour_dt"] == utc_hour]["violation_count"].sum())
+        parquet_tz = df_forecast["hour_dt"].dt.tz
+        if parquet_tz is not None:
+            match_ts = target_ts.tz_convert(parquet_tz) if target_ts.tzinfo else target_ts.tz_localize(parquet_tz)
+        else:
+            match_ts = target_ts.tz_localize(None) if target_ts.tzinfo else target_ts
+        active_viols_count = int(df_forecast[df_forecast["hour_dt"] == match_ts]["violation_count"].sum())
     except Exception:
         active_viols_count = int(hour_forecasts["violation_count"].sum()) if "violation_count" in hour_forecasts.columns else 0
 
@@ -355,7 +360,7 @@ def render_overview():
                 <span class="live-dot" style="color:{live_color}; font-size:16px;">●</span>
                 <span>{'LIVE' if is_fresh else 'STALE'} &nbsp;|&nbsp; Data as of {data_label}</span>
             </div>
-            <div class="header-right">Window: {target_ts.strftime('%Y-%m-%d %I:%M %p')}</div>
+            <div class="header-right">Window: {target_ts_ist.strftime('%Y-%m-%d %I:%M %p')} IST</div>
         </div>
         """, unsafe_allow_html=True)
     with col_picker:
