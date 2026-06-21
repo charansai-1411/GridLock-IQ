@@ -368,7 +368,6 @@ IEU(cell, t) = 100 × (1 − exp(−IEU_raw / k))
 - ✅ **α = 0.8** saturation power — sublinear (first vehicles block most; adding to an already blocked road yields less marginal harm)
 - ✅ **Junction multiplier** — spillover at intersections compounds
 - ✅ **Smooth-squash normalization** — eliminates the spike at exactly 100 that linear P90 clipping produces
-- ✅ **Duration weighting retained** — obstruction duration captures how long a vehicle blocks the road
 
 ### ⚠️ Honest Note on Ground Truth
 
