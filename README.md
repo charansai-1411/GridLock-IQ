@@ -520,7 +520,7 @@ SHAP (SHapley Additive exPlanations) values were pre-computed on the T+1h valida
 
 **Top features by mean |SHAP| value (T+1h model):**
 
-| Rank | Feature | Mean |SHAP| | Interpretation |
+| Rank | Feature | Mean SHAP | Interpretation |
 |---|---|---|---|
 | 1 | Risk Score 2h Ago (`AOI_lag_2h`) | ~5.5 | Strongest temporal signal — 2-hour lag consistently predictive |
 | 2 | Risk Score 3h Ago (`AOI_lag_3h`) | ~3.0 | Medium-term trend confirmation |
