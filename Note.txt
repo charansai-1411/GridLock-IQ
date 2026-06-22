@@ -1,0 +1,11 @@
+Note on Excluded Data Files
+
+The heavy .parquet database files have been intentionally excluded from this ZIP archive to keep the submission lightweight and comply with the portal's upload limits.
+
+For the complete execution environment, please evaluate our submission here:
+
+Live App Deployment: https://gridlock-iq.onrender.com
+
+Full Repository & Data: https://github.com/charansai-1411/GridLock-IQ.git
+
+This ZIP contains strictly the core machine learning architecture, DuckDB queries, and Streamlit .py source code.

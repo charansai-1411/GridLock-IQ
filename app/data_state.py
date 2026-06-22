@@ -181,7 +181,10 @@ def update_filtered_data():
     query = f"""
         SELECT h3_cell, hour_dt, violation_count, latitude, longitude,
                cell_vehicle_mass, junction_flag, AOI, historical_density,
-               pred_t1, pred_t2, pred_t4
+               hist_density_30d,
+               pred_t1, pred_t1_q10, pred_t1_q90, target_t1,
+               pred_t2, pred_t2_q10, pred_t2_q90, target_t2,
+               pred_t4, pred_t4_q10, pred_t4_q90, target_t4
         FROM '{FORECAST_RESULTS_PATH}'
         WHERE hour_dt >= '{start_str}' AND hour_dt <= '{end_str}'
     """
@@ -199,7 +202,10 @@ def update_filtered_data():
         # Downcast floats to float32 and junction_flag to int8 to save memory
         float_cols = [
             "violation_count", "latitude", "longitude", "cell_vehicle_mass",
-            "AOI", "historical_density", "pred_t1", "pred_t2", "pred_t4"
+            "AOI", "historical_density", "hist_density_30d",
+            "pred_t1", "pred_t1_q10", "pred_t1_q90", "target_t1",
+            "pred_t2", "pred_t2_q10", "pred_t2_q90", "target_t2",
+            "pred_t4", "pred_t4_q10", "pred_t4_q90", "target_t4"
         ]
         sub_forecast["junction_flag"] = sub_forecast["junction_flag"].astype("int8")
         sub_forecast[float_cols] = sub_forecast[float_cols].astype("float32")
@@ -214,14 +220,24 @@ def update_filtered_data():
             AOI=("AOI", "mean"),
             AOI_max=("AOI", "max"),
             pred_t1=("pred_t1", "mean"),
+            pred_t1_q10=("pred_t1_q10", "mean"),
+            pred_t1_q90=("pred_t1_q90", "mean"),
+            target_t1=("target_t1", "mean"),
             pred_t2=("pred_t2", "mean"),
+            pred_t2_q10=("pred_t2_q10", "mean"),
+            pred_t2_q90=("pred_t2_q90", "mean"),
+            target_t2=("target_t2", "mean"),
             pred_t4=("pred_t4", "mean"),
+            pred_t4_q10=("pred_t4_q10", "mean"),
+            pred_t4_q90=("pred_t4_q90", "mean"),
+            target_t4=("target_t4", "mean"),
             latitude=("latitude", "mean"),
             longitude=("longitude", "mean"),
             cell_vehicle_mass=("cell_vehicle_mass", "mean"),
             junction_flag=("junction_flag", "max"),
             violation_count=("violation_count", "sum"),
             historical_density=("historical_density", "mean"),
+            hist_density_30d=("hist_density_30d", "mean"),
         ).reset_index()
         agg_forecast["hour_dt"] = ref_ts
     else:
@@ -237,27 +253,37 @@ def update_filtered_data():
             # If empty, return df with correct column schemas to prevent KeyErrors on subpages
             agg_forecast = pd.DataFrame(columns=[
                 "h3_cell", "hour_dt", "violation_count", "latitude", "longitude",
-                "cell_vehicle_mass", "junction_flag", "AOI", "historical_density",
-                "pred_t1", "pred_t2", "pred_t4", "AOI_max"
+                "cell_vehicle_mass", "junction_flag", "AOI", "historical_density", "hist_density_30d",
+                "pred_t1", "pred_t1_q10", "pred_t1_q90", "target_t1",
+                "pred_t2", "pred_t2_q10", "pred_t2_q90", "target_t2",
+                "pred_t4", "pred_t4_q10", "pred_t4_q90", "target_t4", "AOI_max"
             ])
             agg_forecast["h3_cell"] = agg_forecast["h3_cell"].astype(str)
             agg_forecast["hour_dt"] = pd.to_datetime(agg_forecast["hour_dt"])
             agg_forecast["junction_flag"] = agg_forecast["junction_flag"].astype("int8")
             for col in ["violation_count", "latitude", "longitude", "cell_vehicle_mass",
-                        "AOI", "historical_density", "pred_t1", "pred_t2", "pred_t4", "AOI_max"]:
+                        "AOI", "historical_density", "hist_density_30d",
+                        "pred_t1", "pred_t1_q10", "pred_t1_q90", "target_t1",
+                        "pred_t2", "pred_t2_q10", "pred_t2_q90", "target_t2",
+                        "pred_t4", "pred_t4_q10", "pred_t4_q90", "target_t4", "AOI_max"]:
                 agg_forecast[col] = agg_forecast[col].astype("float32")
 
     if sub_forecast.empty:
         sub_forecast = pd.DataFrame(columns=[
             "h3_cell", "hour_dt", "violation_count", "latitude", "longitude",
-            "cell_vehicle_mass", "junction_flag", "AOI", "historical_density",
-            "pred_t1", "pred_t2", "pred_t4"
+            "cell_vehicle_mass", "junction_flag", "AOI", "historical_density", "hist_density_30d",
+            "pred_t1", "pred_t1_q10", "pred_t1_q90", "target_t1",
+            "pred_t2", "pred_t2_q10", "pred_t2_q90", "target_t2",
+            "pred_t4", "pred_t4_q10", "pred_t4_q90", "target_t4"
         ])
         sub_forecast["h3_cell"] = sub_forecast["h3_cell"].astype(str)
         sub_forecast["hour_dt"] = pd.to_datetime(sub_forecast["hour_dt"])
         sub_forecast["junction_flag"] = sub_forecast["junction_flag"].astype("int8")
         for col in ["violation_count", "latitude", "longitude", "cell_vehicle_mass",
-                    "AOI", "historical_density", "pred_t1", "pred_t2", "pred_t4"]:
+                    "AOI", "historical_density", "hist_density_30d",
+                    "pred_t1", "pred_t1_q10", "pred_t1_q90", "target_t1",
+                    "pred_t2", "pred_t2_q10", "pred_t2_q90", "target_t2",
+                    "pred_t4", "pred_t4_q10", "pred_t4_q90", "target_t4"]:
             sub_forecast[col] = sub_forecast[col].astype("float32")
 
     st.session_state["df_forecast"] = sub_forecast

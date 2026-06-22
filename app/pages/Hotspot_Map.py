@@ -193,12 +193,67 @@ _HTML = r"""<!DOCTYPE html>
 body{background:#0f1117;font-family:Inter,sans-serif;overflow:hidden;height:100vh}
 #container{display:flex;width:100%;height:100vh}
 
-/* MAP */
-#map-side{position:relative;flex:0 0 68%;height:100%}
-#map{width:100%;height:100%;background:#0f1117}
+/* MAP-SIDE LAYOUT */
+#map-side{position:relative;flex:0 0 68%;height:100vh;display:flex;flex-direction:column;background:#0f1117}
 .leaflet-container{background:#0f1117!important}
 
-/* FILTER CHIPS */
+/* TAB BAR STYLE */
+.tab-bar{
+  display:flex;
+  background:#12151f;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  padding:8px 12px;
+  gap:8px;
+  align-items:center;
+  z-index:2000;
+  flex-shrink:0;
+  height:48px;
+}
+.map-tab{
+  padding:6px 14px;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:700;
+  color:rgba(255, 255, 255, 0.6);
+  background:transparent;
+  border:1px solid transparent;
+  cursor:pointer;
+  transition:all 0.2s ease;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-family:Inter,sans-serif;
+}
+.map-tab:hover{
+  color:#fff;
+  background:rgba(255,255,255,0.04);
+}
+.map-tab.active{
+  color:#fff;
+  background:rgba(79, 142, 247, 0.15);
+  border-color:rgba(79, 142, 247, 0.4);
+}
+
+/* MAP VIEWPORT AREA */
+.map-viewport{
+  position:relative;
+  flex:1;
+  width:100%;
+  height:calc(100% - 48px);
+}
+.map-wrapper{
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  display:none;
+}
+.map-wrapper.active{
+  display:block;
+}
+
+/* FILTER CHIPS (Relative to hex map) */
 #filter-chips{position:absolute;top:10px;left:10px;z-index:1000;display:flex;gap:7px;flex-wrap:wrap}
 .chip{display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:20px;
   cursor:pointer;font-size:12px;font-weight:700;user-select:none;
@@ -223,12 +278,13 @@ body{background:#0f1117;font-family:Inter,sans-serif;overflow:hidden;height:100v
 .ld{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 
 /* RE-CENTER */
-#recenter{position:absolute;bottom:36px;right:10px;z-index:1000;
+.recenter-btn{position:absolute;bottom:36px;right:14px;z-index:1000;
   background:rgba(13,15,22,.9);border:1px solid rgba(255,255,255,.2);
   color:#fff;width:34px;height:34px;border-radius:6px;cursor:pointer;
   font-size:17px;display:flex;align-items:center;justify-content:center;
-  backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.4)}
-#recenter:hover{background:rgba(79,142,247,.35);border-color:#4f8ef7}
+  backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.4);
+  transition:all .2s;}
+.recenter-btn:hover{background:rgba(79,142,247,.35);border-color:#4f8ef7}
 
 /* TOOLTIP */
 #tooltip{position:fixed;z-index:9999;pointer-events:none;display:none;width:266px;
@@ -309,31 +365,53 @@ canvas#spark{width:100%;height:54px;margin-top:4px;display:block}
 </div>
 
 <div id="container">
-  <!-- LEFT MAP -->
+  <!-- LEFT MAP CONTAINER (68%) -->
   <div id="map-side">
-    <div id="filter-chips">
-      <div class="chip on" id="chip-Critical" onclick="toggleTier('Critical')">🔴 Critical <span id="cnt-Critical">0</span></div>
-      <div class="chip on" id="chip-High"     onclick="toggleTier('High')"    >🟠 High <span id="cnt-High">0</span></div>
-      <div class="chip on" id="chip-Moderate" onclick="toggleTier('Moderate')">🟡 Moderate <span id="cnt-Moderate">0</span></div>
-      <div class="chip on" id="chip-Low"      onclick="toggleTier('Low')"     >🟢 Low <span id="cnt-Low">0</span></div>
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <button class="map-tab active" id="tab-hex" onclick="switchTab('hex')">
+        🗺️ Risk Hexagons
+      </button>
+      <button class="map-tab" id="tab-heat" onclick="switchTab('heat')">
+        🔥 Active Violations Heatmap
+      </button>
     </div>
-    <div id="map"></div>
-    <button id="recenter" onclick="reCenter()" title="Re-center Bengaluru">⌖</button>
-    <div id="legend">
-      <h4>Risk Level</h4>
-      <div class="lr"><div class="ld" style="background:#ff4444"></div><span>Critical &nbsp;≥65</span></div>
-      <div class="lr"><div class="ld" style="background:#ff8c00"></div><span>High &nbsp;&nbsp;&nbsp;&nbsp;50–64</span></div>
-      <div class="lr"><div class="ld" style="background:#f0c040"></div><span>Moderate 25–49</span></div>
-      <div class="lr"><div class="ld" style="background:#2ecc71"></div><span>Low &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1–24</span></div>
-      <div class="lr"><div class="ld" style="background:transparent;border:1px solid rgba(255,255,255,.25)"></div><span>Inactive &nbsp;0</span></div>
+    
+    <!-- Map Viewport -->
+    <div class="map-viewport">
+      <!-- Wrapper for Map A (Risk Hexagons) -->
+      <div id="wrapper-hex" class="map-wrapper active">
+        <div id="filter-chips">
+          <div class="chip on" id="chip-Critical" onclick="toggleTier('Critical')">🔴 Critical <span id="cnt-Critical">0</span></div>
+          <div class="chip on" id="chip-High"     onclick="toggleTier('High')"    >🟠 High <span id="cnt-High">0</span></div>
+          <div class="chip on" id="chip-Moderate" onclick="toggleTier('Moderate')">🟡 Moderate <span id="cnt-Moderate">0</span></div>
+          <div class="chip on" id="chip-Low"      onclick="toggleTier('Low')"     >🟢 Low <span id="cnt-Low">0</span></div>
+        </div>
+        <div id="map" style="width: 100%; height: 100%;"></div>
+        <button class="recenter-btn" onclick="reCenter()" title="Re-center Bengaluru">⌖</button>
+        <div id="legend">
+          <h4>Risk Level (IEU)</h4>
+          <div class="lr"><div class="ld" style="background:#ff4444"></div><span>Critical &nbsp;≥65</span></div>
+          <div class="lr"><div class="ld" style="background:#ff8c00"></div><span>High &nbsp;&nbsp;&nbsp;&nbsp;50–64</span></div>
+          <div class="lr"><div class="ld" style="background:#f0c040"></div><span>Moderate 25–49</span></div>
+          <div class="lr"><div class="ld" style="background:#2ecc71"></div><span>Low &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1–24</span></div>
+          <div class="lr"><div class="ld" style="background:transparent;border:1px solid rgba(255,255,255,.25)"></div><span>Inactive &nbsp;0</span></div>
+        </div>
+      </div>
+      
+      <!-- Wrapper for Map B (Active Violations Heatmap) -->
+      <div id="wrapper-heat" class="map-wrapper">
+        <div id="map-heat" style="width: 100%; height: 100%; background: #0f1117;"></div>
+        <button class="recenter-btn" onclick="reCenter()" title="Re-center Bengaluru">⌖</button>
+      </div>
     </div>
   </div>
 
-  <!-- RIGHT ZONE CARD -->
+  <!-- RIGHT ZONE CARD (32%) -->
   <div id="card-side">
     <div id="card-prompt">
       <div class="icon">🗺️</div>
-      <div>Click any zone on the map<br>to inspect it</div>
+      <div>Click any zone on Map A<br>to inspect it</div>
       <div style="color:#4f8ef7;font-size:11px;margin-top:6px">Or select from the dropdown below</div>
     </div>
     <div class="dd-wrap">
@@ -347,10 +425,51 @@ canvas#spark{width:100%;height:54px;margin-top:4px;display:block}
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <script>
 var FC = __GEOJSON__;
 var TIME_WINDOW = "__TIME_WINDOW__";
+var HEAT_POINTS = __HEATMAP_POINTS__;
 
+// Tab Switching
+var _heatLayer = null;
+function initHeatmap() {
+  if (_heatLayer) return;
+  _heatLayer = L.heatLayer(HEAT_POINTS, {
+    radius: 25,
+    blur: 15,
+    minOpacity: 0.4,
+    maxZoom: 17,
+    gradient: {
+      0.2: '#4a148c', // Deep purple
+      0.4: '#9c27b0', // Magenta
+      0.6: '#ff1744', // Red
+      0.8: '#ff9100', // Orange
+      1.0: '#ffea00'  // Gold/Yellow
+    }
+  }).addTo(mapHeat);
+}
+
+function switchTab(tabName) {
+  document.querySelectorAll('.map-tab').forEach(function(el) {
+    el.classList.remove('active');
+  });
+  document.getElementById('tab-' + tabName).classList.add('active');
+
+  document.querySelectorAll('.map-wrapper').forEach(function(el) {
+    el.classList.remove('active');
+  });
+  document.getElementById('wrapper-' + tabName).classList.add('active');
+
+  if (tabName === 'hex') {
+    map.invalidateSize();
+  } else if (tabName === 'heat') {
+    mapHeat.invalidateSize();
+    initHeatmap();
+  }
+}
+
+// MAP A: Risk Hexagons
 var map = L.map('map', {
   center: [12.9716, 77.5946],
   zoom: 12,
@@ -358,12 +477,38 @@ var map = L.map('map', {
   attributionControl: true
 });
 
-// CartoDB Dark Matter tiles — reliable globally, great contrast
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OSM &copy; CARTO',
   subdomains: 'abcd',
   maxZoom: 19
 }).addTo(map);
+
+// MAP B: Violations Heatmap
+var mapHeat = L.map('map-heat', {
+  center: [12.9716, 77.5946],
+  zoom: 12,
+  zoomControl: true,
+  attributionControl: true
+});
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OSM &copy; CARTO',
+  subdomains: 'abcd',
+  maxZoom: 19
+}).addTo(mapHeat);
+
+// Synchronize maps panning & zoom
+var isSyncing = false;
+function syncMaps(mapSrc, mapTgt) {
+  mapSrc.on('move', function() {
+    if (isSyncing) return;
+    isSyncing = true;
+    mapTgt.setView(mapSrc.getCenter(), mapSrc.getZoom(), { animate: false });
+    isSyncing = false;
+  });
+}
+syncMaps(map, mapHeat);
+syncMaps(mapHeat, map);
 
 // ── State ──────────────────────────────────────────────────────────────
 var _active = {Critical:true, High:true, Moderate:true, Low:true};
@@ -569,6 +714,7 @@ function _drawSpark(p) {
 
 function reCenter() {
   map.setView([12.9716, 77.5946], 12);
+  mapHeat.setView([12.9716, 77.5946], 12);
 }
 </script>
 </body>
@@ -576,11 +722,12 @@ function reCenter() {
 """
 
 
-def _build_html(geojson_str: str, time_window: str) -> str:
+def _build_html(geojson_str: str, time_window: str, heat_points_str: str) -> str:
     return (
         _HTML
         .replace("__GEOJSON__", geojson_str)
         .replace("__TIME_WINDOW__", time_window.replace('"', "'"))
+        .replace("__HEATMAP_POINTS__", heat_points_str)
     )
 
 
@@ -718,9 +865,29 @@ def render_hotspot_map():
                     "AOI", "historical_density", "pred_t1", "pred_t2", "pred_t4"]:
             fc_window[col] = fc_window[col].astype("float32")
 
+    # Extract coordinates and violation counts for heatmap
+    df_heat = fc_window.dropna(subset=['latitude', 'longitude', 'violation_count']).copy()
+    df_heat = df_heat[df_heat['violation_count'] > 0]
+    
+    # Group by lat/lng to get a single point per location with violation sum
+    df_heat_grouped = df_heat.groupby(['latitude', 'longitude'])['violation_count'].sum().reset_index()
+    
+    max_count = df_heat_grouped['violation_count'].max() if not df_heat_grouped.empty else 1.0
+    heat_points = []
+    for _, r in df_heat_grouped.iterrows():
+        val = float(r['violation_count'])
+        # Cap the count at 50 and set floor at 0.4 for clear visual visibility in Leaflet.heat
+        intensity = 0.4 + 0.6 * (min(val, 50.0) / 50.0)
+        heat_points.append([
+            float(r['latitude']),
+            float(r['longitude']),
+            intensity
+        ])
+    heat_points_json = json.dumps(heat_points)
+
     # ── Build + render ────────────────────────────────────────────────────
     geojson_str = build_geojson(fc_window, fc_window, None, station_map, poi_tags)
-    html_content = _build_html(geojson_str, tw)
+    html_content = _build_html(geojson_str, tw, heat_points_json)
     st.components.v1.html(html_content, height=700, scrolling=False)
 
     # ── Summary ───────────────────────────────────────────────────────────

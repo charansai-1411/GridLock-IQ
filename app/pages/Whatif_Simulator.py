@@ -146,7 +146,7 @@ def render_simulator_page():
                 🎲 What-If Simulator — Deployment Scenario Comparison
             </h1>
             <p style="color: #9ca3af; font-family: 'Inter', sans-serif; font-size: 0.85rem; margin: 0;">
-                Compare AI-optimized dispatch vs historical patrol patterns
+                Compare AI-optimized dispatch vs Scenario A baseline (patrols allocated proportional to average violations/hour in the past 30 days at that hour-of-day)
             </p>
         </div>
         """,
@@ -433,7 +433,7 @@ def render_simulator_page():
             }});
             L.control.zoom({{ position: 'topright' }}).addTo(map);
             
-            L.tileLayer('https://{{s}}.basemaps.cartocdn.com/dark_all/{{z}}/{{x}}/{{y}}{{r}}.png', {{
+            L.tileLayer('https://{{s}}.basemaps.cartocdn.com/light_all/{{z}}/{{x}}/{{y}}{{r}}.png', {{
                 attribution: '&copy; OSM &copy; CARTO',
                 subdomains: 'abcd', maxZoom: 19
             }}).addTo(map);
@@ -449,14 +449,14 @@ def render_simulator_page():
                     else if (c.ieu >= 50) hexColor = '#ff8c00';
                     else if (c.ieu >= 25) hexColor = '#f0c040';
                     
-                    var hexOpacity = 0.05 + 0.25 * (c.ieu / 100);
+                    var hexOpacity = 0.15 + 0.45 * (c.ieu / 100);
                     
                     var poly = L.polygon(c.polygon.map(function(pt){{ return [pt[1], pt[0]]; }}), {{
                         fillColor: hexColor,
                         fillOpacity: hexOpacity,
                         color: hexColor,
-                        weight: 1,
-                        opacity: 0.3
+                        weight: 1.5,
+                        opacity: 0.8
                     }}).addTo(layerHexagons);
                     
                     poly.bindTooltip("<strong>" + c.name + "</strong><br>Risk IEU: " + c.ieu.toFixed(1) + "<br>Units A: " + c.units_a + " | B: " + c.units_b);

@@ -13,7 +13,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(_
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from app.data_state import ensure_data_loaded
+from app.data_state import ensure_data_loaded, FORECAST_RESULTS_PATH
 from src.patrol_optimizer import get_dispatch_alerts
 
 def _h(html: str) -> str:
@@ -514,10 +514,93 @@ def render_overview():
             hist_list = [0]*24
         hist_hrly = pd.DataFrame({"hour": range(24), "violation_count": hist_list})
 
-        st.plotly_chart(
-            build_hero_trend_chart(day_hourly, hist_hrly, current_hour),
-            use_container_width=True
-        )
+        tab_city, tab_zones = st.tabs(["📈 City-wide Violations", "🎯 Top 5 Critical Zones Risk Trajectory"])
+        with tab_city:
+            st.plotly_chart(
+                build_hero_trend_chart(day_hourly, hist_hrly, current_hour),
+                use_container_width=True
+            )
+        with tab_zones:
+            top_5_cells = hour_forecasts.sort_values("pred_t1", ascending=False).head(5)["h3_cell"].tolist()
+            if top_5_cells:
+                cell_list_str = ", ".join(f"'{c}'" for c in top_5_cells)
+                start_history_utc = (target_ts - pd.Timedelta(hours=12)).strftime("%Y-%m-%d %H:%M:%S")
+                now_utc = target_ts.strftime("%Y-%m-%d %H:%M:%S")
+                
+                import duckdb
+                con = duckdb.connect()
+                df_traj = con.execute(f"""
+                    SELECT h3_cell, hour_dt, AOI, pred_t1
+                    FROM '{FORECAST_RESULTS_PATH}'
+                    WHERE h3_cell IN ({cell_list_str})
+                      AND hour_dt >= '{start_history_utc}'
+                      AND hour_dt <= '{now_utc}'
+                    ORDER BY h3_cell, hour_dt
+                """).df()
+                con.close()
+                
+                if not df_traj.empty:
+                    df_traj["hour_dt"] = pd.to_datetime(df_traj["hour_dt"])
+                    parquet_tz = df_forecast["hour_dt"].dt.tz
+                    if parquet_tz is not None:
+                        df_traj["local_dt"] = df_traj["hour_dt"].dt.tz_convert(parquet_tz)
+                    else:
+                        df_traj["local_dt"] = df_traj["hour_dt"]
+                    
+                    fig_traj = go.Figure()
+                    for cell in top_5_cells:
+                        cell_df = df_traj[df_traj["h3_cell"] == cell].sort_values("local_dt")
+                        if cell_df.empty:
+                            continue
+                            
+                        poi = poi_tags.get(cell, {})
+                        name = poi.get("poi_label") or station_map.get(cell, {}).get("police_station", cell[:8])
+                        
+                        x_vals = cell_df["local_dt"].dt.strftime("%H:%M").tolist()
+                        y_vals = cell_df["AOI"].tolist()
+                        
+                        last_row = cell_df.iloc[-1]
+                        pred_time = (last_row["local_dt"] + pd.Timedelta(hours=1)).strftime("%H:%M")
+                        pred_val = float(last_row["pred_t1"])
+                        
+                        x_vals.append(pred_time)
+                        y_vals.append(pred_val)
+                        
+                        fig_traj.add_trace(go.Scatter(
+                            x=x_vals,
+                            y=y_vals,
+                            mode='lines+markers',
+                            name=name,
+                            line=dict(width=2.5),
+                            hovertemplate=f"<b>{name}</b><br>Time: %{{x}}<br>Risk Score: %{{y:.1f}}<extra></extra>"
+                        ))
+                        
+                    now_str = target_ts.tz_convert("Asia/Kolkata").strftime("%H:%M") if target_ts.tzinfo else target_ts.strftime("%H:%M")
+                    fig_traj.add_shape(type="line",
+                        x0=now_str, y0=0, x1=now_str, y1=1, yref="paper",
+                        line=dict(color="#ffffff", width=1.5, dash="dash")
+                    )
+                    fig_traj.add_annotation(
+                        x=now_str, y=1.02, yref="paper",
+                        text="NOW", showarrow=False,
+                        font=dict(color="#ffffff", size=10, family="Outfit"),
+                        yanchor="bottom"
+                    )
+                    
+                    fig_traj.update_layout(
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        font=dict(family="Outfit, Inter, sans-serif", color=TEXT_PRI),
+                        height=380,
+                        margin=dict(l=40, r=20, t=10, b=40),
+                        xaxis=dict(title="Time of Day", tickfont=dict(color=TEXT_SEC), gridcolor="rgba(255,255,255,0.05)"),
+                        yaxis=dict(title="Risk Score (IEU)", tickfont=dict(color=TEXT_SEC), gridcolor="rgba(255,255,255,0.05)", range=[0, 105])
+                    )
+                    st.plotly_chart(fig_traj, use_container_width=True)
+                else:
+                    st.info("No trajectory history found for the top cells.")
+            else:
+                st.info("No active critical zones to display trajectory.")
 
     with col_alerts:
         # Build alerts using poi_tags for human-readable zone names
@@ -612,6 +695,76 @@ def render_overview():
     </div>"""), unsafe_allow_html=True)
     st.plotly_chart(risk_fig, use_container_width=True)
 
+    st.markdown(_h(f"""
+    <div style="font-family:Outfit; font-size:13px; color:{TEXT_SEC}; margin-top:10px; margin-bottom:6px;">
+        City-wide Vehicle Contribution to Total Enforcement Urgency (3-Hour Window)
+    </div>"""), unsafe_allow_html=True)
+    
+    start_window = (target_ts - pd.Timedelta(hours=3)).strftime("%Y-%m-%d %H:%M:%S")
+    end_window = target_ts.strftime("%Y-%m-%d %H:%M:%S")
+    
+    import duckdb
+    con = duckdb.connect()
+    df_veh = con.execute(f"""
+        SELECT 
+            clean_vehicle_type, 
+            COUNT(*) as citation_count,
+            SUM(CASE clean_vehicle_type 
+                WHEN 'TANKER' THEN 5.0
+                WHEN 'BUS' THEN 4.5
+                WHEN 'PRIVATE BUS' THEN 4.5
+                WHEN 'SCHOOL VEHICLE' THEN 4.5
+                WHEN 'FACTORY BUS' THEN 4.5
+                WHEN 'HGV' THEN 4.0
+                WHEN 'LORRY' THEN 4.0
+                WHEN 'LORRY/GOODS VEHICLE' THEN 4.0
+                WHEN 'LGV' THEN 3.5
+                WHEN 'MINI LORRY' THEN 3.5
+                WHEN 'TRACTOR' THEN 3.5
+                WHEN 'CAR' THEN 3.0
+                WHEN 'JEEP' THEN 3.0
+                WHEN 'MAXI-CAB' THEN 3.0
+                WHEN 'TEMPO' THEN 3.0
+                WHEN 'TAXI' THEN 2.5
+                WHEN 'VAN' THEN 2.5
+                WHEN 'GOODS AUTO' THEN 2.0
+                WHEN 'PASSENGER AUTO' THEN 2.0
+                WHEN 'MOTOR CYCLE' THEN 1.5
+                WHEN 'SCOOTER' THEN 1.0
+                WHEN 'MOPED' THEN 1.0
+                ELSE 1.0
+            END) as total_mass_weight
+        FROM 'data/processed/cleaned_violations.parquet'
+        WHERE created_datetime >= '{start_window}' AND created_datetime <= '{end_window}'
+        GROUP BY 1
+        ORDER BY total_mass_weight DESC
+    """).df()
+    con.close()
+    
+    if not df_veh.empty:
+        total_weight = df_veh["total_mass_weight"].sum()
+        df_veh["pct_contrib"] = (df_veh["total_mass_weight"] / total_weight) * 100
+        
+        fig_veh = go.Figure(go.Bar(
+            x=df_veh["pct_contrib"][::-1],
+            y=df_veh["clean_vehicle_type"][::-1],
+            orientation="h",
+            marker_color=ACCENT,
+            hovertemplate="Vehicle: %{y}<br>Weight Contrib: %{x:.1f}%<extra></extra>"
+        ))
+        fig_veh.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(family="Outfit, Inter, sans-serif", color=TEXT_PRI),
+            height=200,
+            margin=dict(l=120, r=20, t=10, b=30),
+            xaxis=dict(title="% Contribution to City-wide Mass Load", tickfont=dict(color=TEXT_SEC), gridcolor="rgba(255,255,255,0.05)"),
+            yaxis=dict(tickfont=dict(color=TEXT_SEC))
+        )
+        st.plotly_chart(fig_veh, use_container_width=True)
+    else:
+        st.info("No active vehicle violations in this window.")
+
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
     # ════════════════════════════════════════════════════════════════
@@ -634,7 +787,7 @@ def render_overview():
         )
 
         header_html = f"""
-        <div style="display:grid; grid-template-columns:36px 1fr 100px 80px 100px 90px;
+        <div style="display:grid; grid-template-columns:30px 1.8fr 80px 70px 100px 90px;
                     gap:0; padding:6px 10px; border-bottom:1px solid {BORDER};
                     font-size:11px; font-weight:700; color:{TEXT_SEC};
                     font-family:Inter; letter-spacing:.04em; text-transform:uppercase;">
@@ -663,7 +816,7 @@ def render_overview():
             zebra = "rgba(255,255,255,0.02)" if i % 2 == 0 else "transparent"
 
             rows_html += f"""
-            <div style="display:grid; grid-template-columns:36px 1fr 100px 80px 100px 90px;
+            <div style="display:grid; grid-template-columns:30px 1.8fr 80px 70px 100px 90px;
                         gap:0; padding:10px 10px; background:{zebra};
                         border-bottom:1px solid rgba(255,255,255,0.03);
                         font-family:Inter; align-items:center; min-height:52px;">
@@ -713,6 +866,52 @@ def render_overview():
             use_container_width=True
         )
 
+    # Heatmap Section
+    st.markdown(_h(f"""
+    <div style="font-family:Outfit; font-size:14px; font-weight:700;
+                color:{TEXT_PRI}; margin-top:20px; margin-bottom:10px;">
+        🗓️ City-Wide Congestion Heatmap (Day × Hour)
+    </div>
+    <div style="font-family:Inter; font-size:11px; color:{TEXT_SEC}; margin-bottom:8px;">
+        Average risk (IEU score) across all cells for each day-hour combination.
+    </div>"""), unsafe_allow_html=True)
+    
+    import duckdb
+    con = duckdb.connect()
+    df_heatmap = con.execute(f"""
+        SELECT 
+            CAST(strftime(hour_dt, '%u') AS INTEGER) as day_num,
+            strftime(hour_dt, '%a') as day_name, 
+            hour(hour_dt) as hour_of_day, 
+            AVG(AOI) as mean_ieu
+        FROM '{FORECAST_RESULTS_PATH}'
+        GROUP BY 1, 2, 3
+        ORDER BY day_num, hour_of_day
+    """).df()
+    con.close()
+    
+    pivot = df_heatmap.pivot(index='day_name', columns='hour_of_day', values='mean_ieu')
+    day_order = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    pivot = pivot.reindex(day_order)
+    
+    fig_hm = go.Figure(data=go.Heatmap(
+        z=pivot.values,
+        x=list(pivot.columns),
+        y=list(pivot.index),
+        colorscale='Reds',
+        hovertemplate="Day: %{y}<br>Hour: %{x}:00<br>Avg Risk: %{z:.2f}/100<extra></extra>"
+    ))
+    fig_hm.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Outfit, Inter, sans-serif", color=TEXT_PRI),
+        height=240,
+        margin=dict(l=40, r=10, t=10, b=30),
+        xaxis=dict(tickmode="linear", dtick=2, tickfont=dict(color=TEXT_SEC), gridcolor="rgba(255,255,255,0.05)"),
+        yaxis=dict(tickfont=dict(color=TEXT_SEC), gridcolor="rgba(255,255,255,0.05)")
+    )
+    st.plotly_chart(fig_hm, use_container_width=True)
+
     st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
 
     # ════════════════════════════════════════════════════════════════
@@ -720,6 +919,37 @@ def render_overview():
     # ════════════════════════════════════════════════════════════════
     with st.expander("📊 Model Performance Metrics — Technical Detail", expanded=False):
         st.caption("For supervisors and analysts only — not required for operational dispatch decisions.")
+        
+        # Load cross-validation metrics for display
+        metrics_path = os.path.join(PROJECT_ROOT, "models", "cross_val_metrics.json")
+        metrics_data = {}
+        if os.path.exists(metrics_path):
+            try:
+                with open(metrics_path, "r") as f:
+                    metrics_data = json.load(f)
+            except Exception:
+                pass
+
+        def get_over_val(horizon, name, is_pct=False, decimals=3):
+            t_key = f"t{horizon}"
+            val = metrics_data.get("final", {}).get(t_key, {}).get(name)
+            if val is None:
+                val = metrics_data.get("cv", {}).get(t_key, {}).get(f"{name}_mean")
+            if val is None:
+                return "—"
+            if is_pct:
+                return f"{val * 100:.1f}%"
+            return f"{val:.{decimals}f}"
+
+        def get_over_mae(horizon):
+            t_key = f"t{horizon}"
+            val = metrics_data.get("final", {}).get(t_key, {}).get("mae")
+            if val is None:
+                val = metrics_data.get("cv", {}).get(t_key, {}).get("mae_mean")
+            if val is None:
+                return "—"
+            return f"{val:.2f}"
+
         m1, m2 = st.columns(2)
 
         with m1:
@@ -727,9 +957,9 @@ def render_overview():
             st.markdown(f"""
 | Horizon | Active R² | Critical MAE | Recall |
 |---------|-----------|-------------|--------|
-| T+1h | 0.724 | 9.08 | 87.1% |
-| T+2h | — | 18.09 | — |
-| T+4h | — | 18.04 | — |
+| T+1h | {get_over_val(1, 'r2')} | {get_over_mae(1)} | {get_over_val(1, 'recall', is_pct=True)} |
+| T+2h | {get_over_val(2, 'r2')} | {get_over_mae(2)} | {get_over_val(2, 'recall', is_pct=True)} |
+| T+4h | {get_over_val(4, 'r2')} | {get_over_mae(4)} | {get_over_val(4, 'recall', is_pct=True)} |
 """)
 
         with m2:
@@ -739,7 +969,7 @@ def render_overview():
 |--------|-------|
 | Lag-1h Autocorrelation | 0.884 |
 | Critical tier (active) | 17.4% |
-| Precision @65 threshold | 71.1% |
+| Precision @65 threshold | {get_over_val(1, 'precision', is_pct=True)} |
 | F2 Score | 0.834 |
 | False Positive Rate | 0.47% |
 | Ticket Validation Rate | {val_rt:.1f}% |

@@ -166,10 +166,11 @@ def optimize_patrol_allocations(pred_df, current_time, station_map, total_office
     
     # 2. SCENARIO A: Historical/Baseline Deployment
     # Historical allocation is proportional to the historical density of each cell
-    # Sum historical density
-    sum_hist_density = hour_preds['historical_density'].sum()
+    # Sum historical density (using 30-day hourly historical density if available)
+    density_col = 'hist_density_30d' if 'hist_density_30d' in hour_preds.columns else 'historical_density'
+    sum_hist_density = hour_preds[density_col].sum()
     if sum_hist_density > 0:
-        base_alloc = (hour_preds['historical_density'] / sum_hist_density * total_officers).round().astype(int)
+        base_alloc = (hour_preds[density_col] / sum_hist_density * total_officers).round().astype(int)
         # Adjust rounding mismatch to match total_officers
         diff = total_officers - base_alloc.sum()
         if diff != 0:
