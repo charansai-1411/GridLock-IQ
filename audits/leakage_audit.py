@@ -87,12 +87,12 @@ for _, row in sample5.iterrows():
     ok_tgt = abs(tgt_t1   - aoi_tp1) < 0.01 if not np.isnan(aoi_tp1) else True
     ok_dlt = abs(dlt_t1 - (aoi_tp1 - aoi_t)) < 0.01 if not np.isnan(aoi_tp1) else True
     all_ok = all([ok_aoi, ok_l1, ok_l2, ok_l3, ok_tgt, ok_dlt])
-    print(f"  ✅ CLEAN" if all_ok else f"  ❌ MISMATCH: aoi={ok_aoi} l1={ok_l1} l2={ok_l2} l3={ok_l3} tgt={ok_tgt} dlt={ok_dlt}")
+    print(f"  [OK] CLEAN" if all_ok else f"  [FAIL] MISMATCH: aoi={ok_aoi} l1={ok_l1} l2={ok_l2} l3={ok_l3} tgt={ok_tgt} dlt={ok_dlt}")
 
 # ─── AUDIT 3: AOI ablation ────────────────────────────────────────────────────
 print()
 print("=" * 65)
-print("AUDIT 3: Train T+1h WITHOUT 'AOI' — how much R² survives?")
+print("AUDIT 3: Train T+1h WITHOUT 'AOI' - how much R2 survives?")
 print("=" * 65)
 
 feature_cols_full = [
@@ -154,16 +154,16 @@ def evaluate_model(feat_cols, label):
 r2_with,    mae_with    = evaluate_model(feature_cols_full,    "WITH AOI   (19 features)")
 r2_without, mae_without = evaluate_model(feature_cols_no_aoi, "WITHOUT AOI (18 features)")
 
-print(f"\n  R² delta (active): {r2_with:.4f} → {r2_without:.4f}  "
+print(f"\n  R2 delta (active): {r2_with:.4f} -> {r2_without:.4f}  "
       f"({'collapse' if r2_with - r2_without > 0.05 else 'stable'})")
-print(f"  MAE delta (active): {mae_with:.4f} → {mae_without:.4f}")
+print(f"  MAE delta (active): {mae_with:.4f} -> {mae_without:.4f}")
 
 if r2_with - r2_without > 0.05:
-    print("\n  ⚠️  SIGNIFICANT DROP: most of the R² gain rides on AOI alone.")
+    print("\n  [WARNING] SIGNIFICANT DROP: most of the R2 gain rides on AOI alone.")
     print("     The feature is likely legitimate (mean reversion signal),")
     print("     but the gain is not generalizable without it.")
 else:
-    print("\n  ✅ STABLE: AOI is not the sole source of gain.")
+    print("\n  [OK] STABLE: AOI is not the sole source of gain.")
 
 # ─── AUDIT 4: Split sanity ────────────────────────────────────────────────────
 print()
@@ -177,7 +177,7 @@ print(f"  Val rows:   {len(val_data):,}   min hour: {val_data['hour_dt'].min()}"
 
 overlap = set(train_data['hour_dt'].unique()) & set(val_data['hour_dt'].unique())
 print(f"  Hour overlap between train and val: {len(overlap)} hours  "
-      f"({'❌ LEAKAGE' if overlap else '✅ CLEAN'})")
+      f"({'[FAIL] LEAKAGE' if overlap else '[OK] CLEAN'})")
 
 # Check no cell appears in train at time > split and val at time < split
 train_max = train_data.groupby('h3_cell')['hour_dt'].max()
@@ -185,4 +185,4 @@ val_min   = val_data.groupby('h3_cell')['hour_dt'].min()
 common_cells = train_max.index.intersection(val_min.index)
 leaky_cells = (train_max[common_cells] > val_min[common_cells]).sum()
 print(f"  Cells where train_max > val_min: {leaky_cells}  "
-      f"({'❌ LEAKAGE' if leaky_cells else '✅ CLEAN'})")
+      f"({'[FAIL] LEAKAGE' if leaky_cells else '[OK] CLEAN'})")

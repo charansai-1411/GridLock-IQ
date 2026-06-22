@@ -251,19 +251,9 @@ def train_all_models():
     features_df['seasonal_naive_t2'] = features_df.groupby('h3_cell')['AOI'].shift(166).fillna(0.0)
     features_df['seasonal_naive_t4'] = features_df.groupby('h3_cell')['AOI'].shift(164).fillna(0.0)
 
-    # Filter grid to keep active rows to optimize training time & memory
-    # Active means either the current state has activity, lags have activity, or target has activity
-    active_mask = (
-        (features_df['AOI'] > 0.0) |
-        (features_df['AOI_lag_1h'] > 0.0) |
-        (features_df['AOI_lag_2h'] > 0.0) |
-        (features_df['AOI_lag_3h'] > 0.0) |
-        (features_df['target_t1'] > 0.0) |
-        (features_df['target_t2'] > 0.0) |
-        (features_df['target_t4'] > 0.0)
-    )
-    train_ready_df = features_df[active_mask].copy()
-    print(f"Filtered to active spatio-temporal rows: {len(train_ready_df)} ({len(train_ready_df)/len(features_df)*100:.2f}%)")
+    # Train on the full dense grid to avoid target leakage selection bias and model prediction inflation
+    train_ready_df = features_df.copy()
+    print(f"Using full dense spatio-temporal grid for training: {len(train_ready_df)} rows")
     
     # Chronological split: 80% train, 20% validation based on unique hour timestamps
     unique_hours = np.array(sorted(features_df['hour_dt'].unique()))
